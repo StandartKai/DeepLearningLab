@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from ops import *
 
 def generator(sess, z_dim, output_dim, gf_dim, gfc_dim, c_dim):
     """
@@ -18,10 +19,15 @@ def generator(sess, z_dim, output_dim, gf_dim, gfc_dim, c_dim):
     g_bn2 = batch_norm(name='g_bn2')
     g_bn3 = batch_norm(name='g_bn3')
 
-    output_dim_height = output_dim[0]
-    output_dim_width = output_dim[1]
+    output_height = output_dim[0]
+    output_width = output_dim[1]
 
     z = tf.placeholder(tf.float32, [None, z_dim], name='z')
     summary_z = tf.histogram_summary('z', z)
 
     with tf.variable_scope('generator') as scope:
+        s_h, s_w = output_height, output_width
+        s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
+        s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
+        s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
+        s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
