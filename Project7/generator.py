@@ -1,1 +1,27 @@
 import tensorflow as tf
+
+
+def generator(sess, z_dim, output_dim, gf_dim, gfc_dim, c_dim):
+    """
+    Args:
+      sess: TensorFlow session
+      batch_size: The size of batch. Should be specified before training.
+      y_dim: (optional) Dimension of dim for y. [None]
+      z_dim: (optional) Dimension of dim for Z. [100]
+      gf_dim: (optional) Dimension of gen filters in first conv layer. [64]
+      gfc_dim: (optional) Dimension of gen units for for fully connected layer. [1024]
+      dfc_dim: (optional) Dimension of discrim units for fully connected layer. [1024]
+      c_dim: (optional) Dimension of image color. For grayscale input, set to 1. [3]
+    """
+    g_bn0 = batch_norm(name='g_bn0')
+    g_bn1 = batch_norm(name='g_bn1')
+    g_bn2 = batch_norm(name='g_bn2')
+    g_bn3 = batch_norm(name='g_bn3')
+
+    output_dim_height = output_dim[0]
+    output_dim_width = output_dim[1]
+
+    z = tf.placeholder(tf.float32, [None, z_dim], name='z')
+    summary_z = tf.histogram_summary('z', z)
+
+    with tf.variable_scope('generator') as scope:
