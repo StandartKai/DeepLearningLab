@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 
 def lrelu(x, leak=0.2, name="lrelu"):
@@ -16,6 +17,7 @@ def conv2d(input_, output_dim, k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
         conv = tf.reshape(tf.nn.bias_add(conv, biases), conv.get_shape())
 
     return conv
+
 
 def deconv2d(input_, output_shape,
        k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
@@ -51,6 +53,24 @@ def deconv2d(input_, output_shape,
         return deconv
 
 
+def conv_out_size_same(size, stride):
+    return int(math.ceil(float(size) / float(stride)))
+
+
+def linear(input_, output_size, scope=None, stddev=0.02, bias_start=0.0, with_w=False):
+    shape = input_.get_shape().as_list()
+
+    with tf.variable_scope(scope or "Linear"):
+        matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
+                     tf.random_normal_initializer(stddev=stddev))
+        bias = tf.get_variable("bias", [output_size],
+            initializer=tf.constant_initializer(bias_start))
+    if with_w:
+        return tf.matmul(input_, matrix) + bias, matrix, bias
+    else:
+        return tf.matmul(input_, matrix) + bias
+
+
 class batch_norm(object):
     def __init__(self, epsilon=1e-5, momentum = 0.9, name="batch_norm"):
         with tf.variable_scope(name):
@@ -67,19 +87,14 @@ class batch_norm(object):
                         is_training=train,
                         scope=self.name)
 
+def loadDataFromMNIST(path=None):
+    """ Loads the data from MNIST
+    Example usage of MNIST data:
+        batch = mnist.train.next_batch(<batch_size>)
+        batch[0] --> image, batch[1] --> labels
 
-def linear(input_, output_size, scope=None, stddev=0.02, bias_start=0.0, with_w=False):
-    shape = input_.get_shape().as_list()
-
-    with tf.variable_scope(scope or "Linear"):
-        matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
-                     tf.random_normal_initializer(stddev=stddev))
-        bias = tf.get_variable("bias", [output_size],
-            initializer=tf.constant_initializer(bias_start))
-    if with_w:
-        return tf.matmul(input_, matrix) + bias, matrix, bias
-    else:
-        return tf.matmul(input_, matrix) + bias
-
-def conv_out_size_same(size, stride):
-    return int(math.ceil(float(size) / float(stride)))
+        mnist.test.images
+        mnist.test.labels
+    """
+    path = path if path is not None else '/tmp/tensorflow/mnist/input_data'
+    return input_data.read_data_sets(path, one_hot=True)
