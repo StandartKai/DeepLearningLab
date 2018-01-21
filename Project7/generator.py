@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from ops import *
 
-def generator(sess, z_dim, output_dim=[300,300], gf_dim=64, gfc_dim, c_dim):
+def generator(z, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim=3):
     """
     Args:
       sess: TensorFlow session
@@ -22,7 +22,7 @@ def generator(sess, z_dim, output_dim=[300,300], gf_dim=64, gfc_dim, c_dim):
     output_height = output_dim[0]
     output_width = output_dim[1]
 
-    z = tf.placeholder(tf.float32, [None, z_dim], name='z')
+    # z = tf.placeholder(tf.float32, [None, z_dim], name='z')
     summary_z = tf.histogram_summary('z', z)
 
     with tf.variable_scope('generator') as scope:
