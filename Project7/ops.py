@@ -98,3 +98,9 @@ def loadDataFromMNIST(path=None):
     """
     path = path if path is not None else '/tmp/tensorflow/mnist/input_data'
     return input_data.read_data_sets(path, one_hot=True)
+
+def init_vars()
+    try:
+        tf.global_variables_initalizer().run()
+    except:
+        tf.initialize_vall_variabels().run()

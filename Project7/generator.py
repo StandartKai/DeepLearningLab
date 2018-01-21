@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from ops import *
 
-def generator(z, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim=3):
+def generator(z, y, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim=3):
     """
     Args:
       sess: TensorFlow session
@@ -23,7 +23,7 @@ def generator(z, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim
     output_width = output_dim[1]
 
     # z = tf.placeholder(tf.float32, [None, z_dim], name='z')
-    summary_z = tf.histogram_summary('z', z)
+    
 
     with tf.variable_scope('generator') as scope:
         # Calculate the sizes for the transposed convolutional layer
