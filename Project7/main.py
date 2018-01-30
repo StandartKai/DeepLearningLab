@@ -109,9 +109,10 @@ def main(sess, restore=True):
                 })
                 print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
                     % (epoch, errD_fake+errD_real, errG))
-        save_path = saver.save(sess, "C:/Users/Kai/" + str(epochs) + "/model.ckpt")
+            if epoch % 1000 == 0:
+                save_path = saver.save(sess, "./saves/" + str(epoch) + "/model.ckpt")
     else:
-        saver.restore(sess, "C:Users/Kai/DeepLearningLab/Project7/20000/model.ckpt")
+        saver.restore(sess, "./saves/1000/model.ckpt")
         print("Model loaded")
 
 
