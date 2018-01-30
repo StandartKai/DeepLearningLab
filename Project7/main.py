@@ -15,6 +15,8 @@ def main(sess):
     Y_DIM = 10
     # number of elements in generator conv2d_transpose
     Z_DIM = 100
+
+    # optimizer variables
     LEARNING_RATE = 0.002
     BETA_1 = 0.5
 
@@ -27,13 +29,16 @@ def main(sess):
     inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
                         name='real_images')
 
+    # noise / seed
     z = tf.placeholder(tf.float32, [None, Z_DIM], name='z')
     z_sum = tf.histogram_summary('z', z)
 
     gen_output = generator(z, y, z_dim=Z_DIM, output_dim=[INPUT_HEIGHT, INPUT_WIDTH],
                             gf_dim=64, gfc_dim=1024, c_dim=C_DIM)
 
+    # actual images as input
     d, d_logits = discriminator(inputs, y, reuse=False)
+    # generated, "fake" images as input
     d_, d_logits_ = discriminator(gen_output, y, reuse=True)
 
     d_sum = histogram_summary("d", d)
@@ -41,11 +46,11 @@ def main(sess):
     g_sum = image_summary("G", gen_output)
 
     d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, tf.ones_like(d)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
     d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(d_logits_, tf.ones_like(d_)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
     gen_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=, labels=))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
