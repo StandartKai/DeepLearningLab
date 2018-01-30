@@ -49,12 +49,12 @@ def main(sess, restore=True):
         d__sum = tf.summary.histogram("d_", d_)
         g_sum = tf.summary.image("G", gen_output)
 
-        d_loss_real = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
-        d_loss_fake = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.zeros_like(d_)))
-        g_loss = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
+    d_loss_real = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
+    d_loss_fake = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.zeros_like(d_)))
+    g_loss = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
 
         d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
         d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -85,31 +85,37 @@ def main(sess, restore=True):
             images, labels = mnist.train.next_batch(BATCH_SIZE)
             images = np.reshape(images, (-1, 28, 28, 1))
 
-            batch_z = np.random.uniform(0, 1, size=(BATCH_SIZE , Z_DIM))
+            batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
             _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
-            writer.add_summary(summary_str, epoch)
+            if epoch % 100 == 0:
+                writer.add_summary(summary_str, epoch)
 
             _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-            writer.add_summary(summary_str, epoch)
+            if epoch % 100 == 0:
+                writer.add_summary(summary_str, epoch)
             _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-            writer.add_summary(summary_str, epoch)
+            if epoch % 100 == 0:
+                writer.add_summary(summary_str, epoch)
 
             if epoch % 100 == 0:
-                errD_fake = d_loss_fake.eval({
-                    z: batch_z,
-                    y: labels
-                })
-                errD_real = d_loss_real.eval({
-                    inputs: images,
-                    y: labels
-                })
-                errG = g_loss.eval({
-                    z: batch_z,
-                    y: labels
-                })
-                print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
-                    % (epoch, errD_fake+errD_real, errG))
-        save_path = saver.save(sess, "C:/Users/Kai/" + str(epochs) + "/model.ckpt")
+                writer.add_summary(summary_str, epoch)
+
+                if epoch % 100 == 0:
+                    errD_fake = d_loss_fake.eval({
+                        z: batch_z,
+                        y: labels
+                    })
+                    errD_real = d_loss_real.eval({
+                        inputs: images,
+                        y: labels
+                    })
+                    errG = g_loss.eval({
+                        z: batch_z,
+                        y: labels
+                    })
+                    print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
+                        % (epoch, errD_fake+errD_real, errG))
+        save_path = saver.save(sess, "./save/" + str(epochs) + "/model.ckpt")
     else:
         saver.restore(sess, "C:Users/Kai/DeepLearningLab/Project7/20000/model.ckpt")
         print("Model loaded")
