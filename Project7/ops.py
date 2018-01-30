@@ -1,4 +1,5 @@
 import tensorflow as tf
+import math
 from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -35,22 +36,22 @@ def deconv2d(input_, output_shape,
         w = tf.get_variable('w', [k_h, k_w, output_shape[-1], input_.get_shape()[-1]],
                 initializer=tf.random_normal_initializer(stddev=stddev))
 
-    try:
-        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
-                  strides=[1, d_h, d_w, 1])
+        try:
+            deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
+                      strides=[1, d_h, d_w, 1])
 
-    # Support for verisons of TensorFlow before 0.7.0
-    except AttributeError:
-        deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,
-                  strides=[1, d_h, d_w, 1])
+        # Support for verisons of TensorFlow before 0.7.0
+        except AttributeError:
+            deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,
+                      strides=[1, d_h, d_w, 1])
 
-    biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
-    deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
+        biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
+        deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
 
-    if with_w:
-        return deconv, w, biases
-    else:
-        return deconv
+        if with_w:
+            return deconv, w, biases
+        else:
+            return deconv
 
 
 def conv_out_size_same(size, stride):
@@ -99,8 +100,8 @@ def loadDataFromMNIST(path=None):
     path = path if path is not None else '/tmp/tensorflow/mnist/input_data'
     return input_data.read_data_sets(path, one_hot=True)
 
-def init_vars()
+def init_vars():
     try:
-        tf.global_variables_initalizer().run()
+        tf.global_variables_initializer().run()
     except:
-        tf.initialize_vall_variabels().run()
+        tf.initialize_all_variables().run()
