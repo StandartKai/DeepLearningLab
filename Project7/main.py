@@ -83,14 +83,14 @@ def main(sess):
         images, labels = mnist.train.next_batch(BATCH_SIZE)
         images = np.reshape(images, (-1, 28, 28, 1))
 
-        batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
+        batch_z = np.random.uniform(0, 1, size=(BATCH_SIZE , Z_DIM))
         _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
-        writer.add_summary(summary_str)
+        writer.add_summary(summary_str, epoch)
 
         _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-        writer.add_summary(summary_str)
+        writer.add_summary(summary_str, epoch)
         _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-        writer.add_summary(summary_str)
+        writer.add_summary(summary_str, epoch)
 
         if epoch % 100 == 0:
             errD_fake = d_loss_fake.eval({
