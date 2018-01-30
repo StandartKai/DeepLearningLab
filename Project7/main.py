@@ -55,7 +55,7 @@ def main(sess):
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
 
-    d_loss = d_loss_fake + d_loss_real_sum
+    d_loss = d_loss_fake + d_loss_real
 
     g_loss_sum = tf.summary.scalar("g_loss_sum", gen_loss)
     d_loss_sum = tf.summary.scalar("d_loss_sum", d_loss)
@@ -66,10 +66,10 @@ def main(sess):
 
     """ TRAIN PART """
 
-    d_optimizer = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
+    d_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
                 .minimize(d_loss, var_list=d_vars)
     g_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
-                .minimize(self.g_loss, var_list=self.g_vars)
+                .minimize(g_loss, var_list=g_vars)
 
     init_vars()
 
@@ -78,7 +78,33 @@ def main(sess):
     writer = tf.train.SummaryWriter('./logs', sess.graph)
 
     for epoch in xrange(NUM_EPOCHES):
-        pass
+        batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , z_dim))
+        _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
+        writer.add_summary(summary_str)
+
+        _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+        writer.add_summary(summary_str)
+        _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+        writer.add_summary(summary_str)
+
+        if epoch % 100 == 0:
+            errD_fake = d_loss_fake.eval({
+              z: batch_z,
+              y: labels
+          })
+          errD_real = d_loss_real.eval({
+              inputs: images,
+              y: labels
+          })
+          errG = g_loss.eval({
+              z: batch_z,
+              y: labels
+          })
+          print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
+          % (epoch, errD_fake+errD_real, errG))
+
+
+
 
 
 
