@@ -6,107 +6,125 @@ import numpy as np
 from six.moves import xrange
 
 # size of eaach picture: 28 x 28
-def main(sess):
-    BATCH_SIZE = 64
-    NUM_EPOCHES = 10000
-    INPUT_HEIGHT = 28
-    INPUT_WIDTH = 28
-    # Color dimension: e.g 1 for grayscale and 3 for RGB
-    C_DIM = 1
-    # number of dimension of a label
-    Y_DIM = 10
-    # number of elements in generator conv2d_transpose
-    Z_DIM = 100
+def main(sess, restore=True):
+    saver = tf.train.Saver()
+    if not restore:
+        BATCH_SIZE = 64
+        NUM_EPOCHES = 10000
+        INPUT_HEIGHT = 28
+        INPUT_WIDTH = 28
+        # Color dimension: e.g 1 for grayscale and 3 for RGB
+        C_DIM = 1
+        # number of dimension of a label
+        Y_DIM = 10
+        # number of elements in generator conv2d_transpose
+        Z_DIM = 100
 
-    # optimizer variables
-    LEARNING_RATE = 0.002
-    BETA_1 = 0.5
+        # optimizer variables
+        LEARNING_RATE = 0.002
+        BETA_1 = 0.5
 
-    mnist = loadDataFromMNIST()
+        mnist = loadDataFromMNIST()
 
 
-    #x = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_WIDTH*INPUT_HEIGHT])
-    y = tf.placeholder(tf.float32, [BATCH_SIZE, Y_DIM], name='y')
+        #x = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_WIDTH*INPUT_HEIGHT])
+        y = tf.placeholder(tf.float32, [BATCH_SIZE, Y_DIM], name='y')
 
-    inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
-                        name='real_images')
+        inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
+                            name='real_images')
 
-    # noise / seed
-    z = tf.placeholder(tf.float32, [None, Z_DIM], name='z')
-    z_sum = tf.summary.histogram('z', z)
+        # noise / seed
+        z = tf.placeholder(tf.float32, [None, Z_DIM], name='z')
+        z_sum = tf.summary.histogram('z', z)
 
-    gen_output = generator(z, y, batch_size=BATCH_SIZE, z_dim=Z_DIM, output_dim=[INPUT_HEIGHT, INPUT_WIDTH],
-                            gf_dim=64, gfc_dim=1024, c_dim=C_DIM)
+        gen_output = generator(z, y, batch_size=BATCH_SIZE, z_dim=Z_DIM, output_dim=[INPUT_HEIGHT, INPUT_WIDTH],
+                                gf_dim=64, gfc_dim=1024, c_dim=C_DIM)
 
-    # actual images as input
-    d, d_logits = discriminator(inputs, reuse=False)
-    # generated, "fake" images as input
-    d_, d_logits_ = discriminator(gen_output, reuse=True)
+        # actual images as input
+        d, d_logits = discriminator(inputs, reuse=False)
+        # generated, "fake" images as input
+        d_, d_logits_ = discriminator(gen_output, reuse=True)
 
-    d_sum = tf.summary.histogram("d", d)
-    d__sum = tf.summary.histogram("d_", d_)
-    g_sum = tf.summary.image("G", gen_output)
+        d_sum = tf.summary.histogram("d", d)
+        d__sum = tf.summary.histogram("d_", d_)
+        g_sum = tf.summary.image("G", gen_output)
 
-    d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
-    d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.zeros_like(d_)))
-    g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
+        d_loss_real = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
+        d_loss_fake = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.zeros_like(d_)))
+        g_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
 
-    d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
-    d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
+        d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
+        d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
 
-    d_loss = d_loss_fake + d_loss_real
+        d_loss = d_loss_fake + d_loss_real
 
-    g_loss_sum = tf.summary.scalar("g_loss_sum", g_loss)
-    d_loss_sum = tf.summary.scalar("d_loss_sum", d_loss)
+        g_loss_sum = tf.summary.scalar("g_loss_sum", g_loss)
+        d_loss_sum = tf.summary.scalar("d_loss_sum", d_loss)
 
-    t_vars = tf.trainable_variables()
-    d_vars = [var for var in t_vars if 'd_' in var.name]
-    g_vars = [var for var in t_vars if 'g_' in var.name]
+        t_vars = tf.trainable_variables()
+        d_vars = [var for var in t_vars if 'd_' in var.name]
+        g_vars = [var for var in t_vars if 'g_' in var.name]
 
-    """ TRAIN PART """
+        """ TRAIN PART """
 
-    d_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
-                .minimize(d_loss, var_list=d_vars)
-    g_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
-                .minimize(g_loss, var_list=g_vars)
+        d_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
+                    .minimize(d_loss, var_list=d_vars)
+        g_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
+                    .minimize(g_loss, var_list=g_vars)
 
-    init_vars()
+        init_vars()
 
-    g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
-    d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
-    writer = tf.summary.FileWriter('./logs', sess.graph)
+        g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
+        d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+        writer = tf.summary.FileWriter('./logs', sess.graph)
 
-    for epoch in xrange(NUM_EPOCHES):
-        images, labels = mnist.train.next_batch(BATCH_SIZE)
-        images = np.reshape(images, (-1, 28, 28, 1))
+        for epoch in xrange(NUM_EPOCHES):
+            images, labels = mnist.train.next_batch(BATCH_SIZE)
+            images = np.reshape(images, (-1, 28, 28, 1))
 
-        batch_z = np.random.uniform(0, 1, size=(BATCH_SIZE , Z_DIM))
-        _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
-        writer.add_summary(summary_str, epoch)
+            batch_z = np.random.uniform(0, 1, size=(BATCH_SIZE , Z_DIM))
+            _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
+            writer.add_summary(summary_str, epoch)
 
-        _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-        writer.add_summary(summary_str, epoch)
-        _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
-        writer.add_summary(summary_str, epoch)
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+            writer.add_summary(summary_str, epoch)
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+            writer.add_summary(summary_str, epoch)
 
-        if epoch % 100 == 0:
-            errD_fake = d_loss_fake.eval({
-                z: batch_z,
-                y: labels
-            })
-            errD_real = d_loss_real.eval({
-                inputs: images,
-                y: labels
-            })
-            errG = g_loss.eval({
-                z: batch_z,
-                y: labels
-            })
-            print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
-                % (epoch, errD_fake+errD_real, errG))
+            if epoch % 100 == 0:
+                errD_fake = d_loss_fake.eval({
+                    z: batch_z,
+                    y: labels
+                })
+                errD_real = d_loss_real.eval({
+                    inputs: images,
+                    y: labels
+                })
+                errG = g_loss.eval({
+                    z: batch_z,
+                    y: labels
+                })
+                print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
+                    % (epoch, errD_fake+errD_real, errG))
+        save_path = saver.save(sess, "C:/Users/Kai/" + str(epochs) + "/model.ckpt")
+    else:
+        saver.restore(sess, "C:Users/Kai/DeepLearningLab/Project7/20000/model.ckpt")
+        print("Model loaded")
+
+
+def model_dir():
+    return "{}_{}_{}".format(
+        batch_size,
+        self.output_height, self.output_width)
+
+
+def save(directory, step):
+    model_name = "DCGAN.model"
+    if not os.path.exists(directory):
+      os.makedirs(directory)
 
 
 with tf.Session() as sess:
