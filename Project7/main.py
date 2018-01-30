@@ -1,7 +1,11 @@
 from discriminator import *
 from generator import *
 from ops import loadDataFromMNIST
+
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from six.moves import xrange
 
@@ -117,8 +121,18 @@ def main(sess, restore=True):
     else:
         saver.restore(sess, "./save/")
         print("Model loaded")
-        # do something
+
+        images, labels = mnist.train.next_batch(BATCH_SIZE)
+        batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
+
+        generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
+
+        for i, image in enumerate(generated_images):
+            image = np.reshape(image, (28, 28))
+            plt.imshow(image, vmin=0, vmax=1, cmap='gray')
+            plt.savefig('./pictures/' + str(i) + '.png')
+
 
 
 with tf.Session() as sess:
-    main(sess, restore=False)
+    main(sess, restore=True)

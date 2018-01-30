@@ -46,14 +46,17 @@ def generator(z, y, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_
         h1, h1_w, h1_b = deconv2d(h0, [batch_size, s_h8, s_w8, gf_dim * 4],
                                     name='g_h1', with_w=True)
         h1 = tf.nn.relu(g_bn1(h1))
+        h1 = tf.layers.dropout(inputs=h1, rate=0.5)
 
         h2, h2_w, h2_b = deconv2d(h1, [batch_size, s_h4, s_w4, gf_dim * 2],
                                     name='g_h2', with_w=True)
         h2 = tf.nn.relu(g_bn2(h2))
+        h2 = tf.layers.dropout(inputs=h2, rate=0.5)
 
         h3, h3_w, h3_b = deconv2d(h2, [batch_size, s_h2, s_w2, gf_dim * 1],
                                     name='g_h3', with_w=True)
         h3 = tf.nn.relu(g_bn3(h3))
+        h3 = tf.layers.dropout(inputs=h3, rate=0.5)
 
         h4, h4_w, h4_b = deconv2d(h3, [batch_size, s_h, s_w, c_dim],
                                     name='g_h4', with_w=True)
