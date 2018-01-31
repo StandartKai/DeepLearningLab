@@ -53,11 +53,33 @@ def main(sess, restore=True):
     g_sum = tf.summary.image("G", gen_output)
 
     d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.ones_like(d)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.random_uniform(
+            d.shape,
+            minval=0.7,
+            maxval=1.2,
+            dtype=tf.float32,
+            seed=None,
+            name=None
+            )))
     d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.zeros_like(d_)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
+            d.shape,
+            minval=0,
+            maxval=0.3,
+            dtype=tf.float32,
+            seed=None,
+            name=None
+            )
+    ))
     g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.ones_like(d_)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
+            d_.shape,
+            minval=0.7,
+            maxval=1.2,
+            dtype=tf.float32,
+            seed=None,
+            name=None
+            )))
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -135,4 +157,4 @@ def main(sess, restore=True):
 
 
 with tf.Session() as sess:
-    main(sess, restore=True)
+    main(sess, restore=False)
