@@ -11,9 +11,8 @@ from six.moves import xrange
 
 # size of eaach picture: 28 x 28
 def main(sess, restore=True):
-
     BATCH_SIZE = 64
-    NUM_EPOCHES = 10000
+    NUM_EPOCHES = 20000
     INPUT_HEIGHT = 28
     INPUT_WIDTH = 28
     # Color dimension: e.g 1 for grayscale and 3 for RGB
@@ -29,12 +28,9 @@ def main(sess, restore=True):
 
     mnist = loadDataFromMNIST()
 
-
-    #x = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_WIDTH*INPUT_HEIGHT])
-    y = tf.placeholder(tf.float32, [BATCH_SIZE, Y_DIM], name='y')
-
     inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
                         name='real_images')
+    y = tf.placeholder(tf.float32, [BATCH_SIZE, Y_DIM], name='y')
 
     # noise / seed
     z = tf.placeholder(tf.float32, [None, Z_DIM], name='z')
@@ -141,7 +137,7 @@ def main(sess, restore=True):
                     % (epoch, errD_fake+errD_real, errG))
         save_path = saver.save(sess, "./save/")
     else:
-        saver.restore(sess, "./save/lul")
+        saver.restore(sess, "./save/")
         print("Model loaded")
 
         images, labels = mnist.train.next_batch(BATCH_SIZE)
@@ -149,10 +145,19 @@ def main(sess, restore=True):
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
 
-        for i, image in enumerate(generated_images):
-            image = np.reshape(image, (28, 28))
-            plt.imshow(image, vmin=0, vmax=1, cmap='gray')
-            plt.savefig('./pictures/' + str(i) + '.png')
+
+        generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
+        saveNoiseAndImage(np.concatenate((generated_images_flat, batch_z), axis=1), z_dim=Z_DIM)
+
+        # for i, image in enumerate(generated_images):
+        #     image = np.reshape(image, (28, 28))
+        #     plt.imshow(image, vmin=0, vmax=1, cmap='gray')
+        #     plt.savefig('./pictures/' + str(i) + '.png')
 
 with tf.Session() as sess:
-    main(sess, restore=False)
+    main(sess, restore=True)
+
+    images, noises = loadNoiseAndImage()
+    # for i in range(len(images)):
+    #     saveImage(images[i], 28, 28, str(i) + '-image')
+    #     saveImage(noises[i], 4, 25, str(i) + '-noise')

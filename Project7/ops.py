@@ -1,6 +1,11 @@
 import tensorflow as tf
 import math
+import numpy as np
+import h5py
 from tensorflow.examples.tutorials.mnist import input_data
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 def lrelu(x, leak=0.2, name="lrelu"):
@@ -105,3 +110,26 @@ def init_vars():
         tf.global_variables_initializer().run()
     except:
         tf.initialize_all_variables().run()
+
+def saveNoiseAndImage(data, z_dim):
+    print('### Saving images and noise vectors')
+    h5f = h5py.File('data.h5', 'w')
+    h5f.create_dataset('image_with_noise', data=data)
+    h5f.attrs['z_dim'] = z_dim
+    h5f.close()
+    print('### Finished saving images and noise vectors')
+
+def loadNoiseAndImage():
+    print('### Loading saved images and noise vectors')
+    h5f = h5py.File('data.h5', 'r')
+    data = h5f['image_with_noise'][:]
+    z_dim = h5f.attrs['z_dim']
+    images, noise_vectors = data[:,:-z_dim], data[:,-z_dim:]
+    h5f.close()
+    print('### Finished loading images and noise vectors')
+    return images, noise_vectors
+
+def saveImage(image_data, height, width, name):
+    image_data_reshaped = np.reshape(image_data, (height, width))
+    plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray')
+    plt.savefig('./pictures/' + name + '.png')
