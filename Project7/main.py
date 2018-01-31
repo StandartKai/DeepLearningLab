@@ -147,7 +147,7 @@ def main(sess, restore=True):
 
 
         generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
-        saveNoiseAndImage(np.concatenate((generated_images_flat, batch_z), axis=1), z_dim=Z_DIM)
+        saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1), z_dim=Z_DIM)
 
         # for i, image in enumerate(generated_images):
         #     image = np.reshape(image, (28, 28))
@@ -157,7 +157,7 @@ def main(sess, restore=True):
 with tf.Session() as sess:
     main(sess, restore=True)
 
-    images, noises = loadNoiseAndImage()
+    images, noises = loadImageAndNoise()
     # for i in range(len(images)):
     #     saveImage(images[i], 28, 28, str(i) + '-image')
     #     saveImage(noises[i], 4, 25, str(i) + '-noise')

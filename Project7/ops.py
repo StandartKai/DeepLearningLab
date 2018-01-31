@@ -111,7 +111,7 @@ def init_vars():
     except:
         tf.initialize_all_variables().run()
 
-def saveNoiseAndImage(data, z_dim):
+def saveImageAndNoise(data, z_dim):
     print('### Saving images and noise vectors')
     h5f = h5py.File('data.h5', 'w')
     h5f.create_dataset('image_with_noise', data=data)
@@ -119,7 +119,7 @@ def saveNoiseAndImage(data, z_dim):
     h5f.close()
     print('### Finished saving images and noise vectors')
 
-def loadNoiseAndImage():
+def loadImageAndNoise():
     print('### Loading saved images and noise vectors')
     h5f = h5py.File('data.h5', 'r')
     data = h5f['image_with_noise'][:]
@@ -129,7 +129,7 @@ def loadNoiseAndImage():
     print('### Finished loading images and noise vectors')
     return images, noise_vectors
 
-def saveImage(image_data, height, width, name):
+def plotImage(image_data, height, width, name):
     image_data_reshaped = np.reshape(image_data, (height, width))
     plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray')
     plt.savefig('./pictures/' + name + '.png')
