@@ -141,7 +141,7 @@ def main(sess, restore=True):
                     % (epoch, errD_fake+errD_real, errG))
         save_path = saver.save(sess, "./save/")
     else:
-        saver.restore(sess, "./save/")
+        saver.restore(sess, "./save/lul")
         print("Model loaded")
 
         images, labels = mnist.train.next_batch(BATCH_SIZE)
@@ -153,8 +153,6 @@ def main(sess, restore=True):
             image = np.reshape(image, (28, 28))
             plt.imshow(image, vmin=0, vmax=1, cmap='gray')
             plt.savefig('./pictures/' + str(i) + '.png')
-
-
 
 with tf.Session() as sess:
     main(sess, restore=False)

@@ -42,6 +42,7 @@ def generator(z, y, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_
 
         # use normaliziation and relu.
         h0 = tf.nn.relu(g_bn0(h0))
+        h0 = tf.layers.dropout(inputs=h0, rate=0.5)
 
         h1, h1_w, h1_b = deconv2d(h0, [batch_size, s_h8, s_w8, gf_dim * 4],
                                     name='g_h1', with_w=True)
@@ -60,4 +61,4 @@ def generator(z, y, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_
 
         h4, h4_w, h4_b = deconv2d(h3, [batch_size, s_h, s_w, c_dim],
                                     name='g_h4', with_w=True)
-        return tf.nn.tanh(h4)
+        return tf.layers.dropout(inputs=tf.nn.tanh(h4), rate=0.5)
