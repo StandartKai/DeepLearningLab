@@ -12,7 +12,7 @@ from six.moves import xrange
 # size of eaach picture: 28 x 28
 def main(sess, restore=True):
     BATCH_SIZE = 64
-    NUM_EPOCHES = 20000
+    NUM_EPOCHES = 30000
     INPUT_HEIGHT = 28
     INPUT_WIDTH = 28
     # Color dimension: e.g 1 for grayscale and 3 for RGB
@@ -25,6 +25,10 @@ def main(sess, restore=True):
     # optimizer variables
     LEARNING_RATE = 0.002
     BETA_1 = 0.5
+
+    # If you want to evaluate: set train=False and Restore=True
+    TRAIN = True
+    RESTORE = True
 
     mnist = loadDataFromMNIST()
 
@@ -99,65 +103,76 @@ def main(sess, restore=True):
     init_vars()
     saver = tf.train.Saver()
 
-    g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
-    d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+    #g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
+    g_sum = tf.summary.merge([g_sum, d_loss_fake_sum, g_loss_sum])
+
+    #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+    d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
+
     writer = tf.summary.FileWriter('./logs', sess.graph)
 
-    if not restore:
-        for epoch in xrange(NUM_EPOCHES):
+    epoch_of_checkpoint = 0
+    if RESTORE:
+        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
+    if TRAIN:
+        if epoch_of_checkpoint > NUM_EPOCHES:
+            print('### WARNING: Max. number of epoches already reached.')
+            return
+
+        for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
             images, labels = mnist.train.next_batch(BATCH_SIZE)
             images = np.reshape(images, (-1, 28, 28, 1))
-
             batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
-            _, summary_str = sess.run([d_optim, d_sum], feed_dict={inputs: images, y: labels, z: batch_z})
+
+            _, summary_str = sess.run([d_optim, d_sum],
+                            feed_dict={inputs: images, y: labels, z: batch_z})
             if epoch % 100 == 0:
                 writer.add_summary(summary_str, epoch)
 
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+            _, summary_str = sess.run([g_optim, g_sum],
+                            feed_dict={y: labels, z: batch_z})
             if epoch % 100 == 0:
                 writer.add_summary(summary_str, epoch)
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={y: labels, z: batch_z})
+
+            _, summary_str = sess.run([g_optim, g_sum],
+                            feed_dict={y: labels, z: batch_z})
             if epoch % 100 == 0:
                 writer.add_summary(summary_str, epoch)
 
             if epoch % 100 == 0:
-                errD_fake = d_loss_fake.eval({
-                    z: batch_z,
-                    y: labels
-                })
-                errD_real = d_loss_real.eval({
-                    inputs: images,
-                    y: labels
-                })
-                errG = g_loss.eval({
-                    z: batch_z,
-                    y: labels
-                })
+                errD_fake = d_loss_fake.eval({z: batch_z, y: labels})
+                errD_real = d_loss_real.eval({inputs: images, y: labels})
+                errG = g_loss.eval({z: batch_z, y: labels})
                 print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
                     % (epoch, errD_fake+errD_real, errG))
-        save_path = saver.save(sess, "./save/")
-    else:
-        saver.restore(sess, "./save/")
-        print("Model loaded")
 
+            if epoch % 500 == 0:
+                saver.save(sess, "./save/")
+                saveEpochToFile(epoch)
+
+        save_path = saver.save(sess, "./save/")
+        saveEpochToFile(epoch)
+
+
+    elif RESTORE and not TRAIN:
         images, labels = mnist.train.next_batch(BATCH_SIZE)
         batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
-
-
         generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
-        saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1), z_dim=Z_DIM)
+        saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1),
+                                            z_dim=Z_DIM)
 
         # for i, image in enumerate(generated_images):
         #     image = np.reshape(image, (28, 28))
         #     plt.imshow(image, vmin=0, vmax=1, cmap='gray')
         #     plt.savefig('./pictures/' + str(i) + '.png')
 
-with tf.Session() as sess:
-    main(sess, restore=True)
 
-    images, noises = loadImageAndNoise()
+with tf.Session() as sess:
+    main(sess)
+
+    #images, noises = loadImageAndNoise()
     # for i in range(len(images)):
     #     saveImage(images[i], 28, 28, str(i) + '-image')
     #     saveImage(noises[i], 4, 25, str(i) + '-noise')

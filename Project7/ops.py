@@ -7,6 +7,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from os import getcwd
+
 
 def lrelu(x, leak=0.2, name="lrelu"):
     return tf.maximum(x, leak*x)
@@ -93,6 +95,7 @@ class batch_norm(object):
                         is_training=train,
                         scope=self.name)
 
+
 def loadDataFromMNIST(path=None):
     """ Loads the data from MNIST
     Example usage of MNIST data:
@@ -105,11 +108,38 @@ def loadDataFromMNIST(path=None):
     path = path if path is not None else '/tmp/tensorflow/mnist/input_data'
     return input_data.read_data_sets(path, one_hot=True)
 
+
 def init_vars():
     try:
         tf.global_variables_initializer().run()
     except:
         tf.initialize_all_variables().run()
+
+
+def tryToRestoreSavedSession(saver, sess):
+    print('### Try to restore a saved session in path {}'
+            .format(getcwd() + '/save/'))
+    try:
+        saver.restore(sess, './save/')
+        print('### Session successfully restored', end='\n')
+
+        print('### Try to read ./save/epochOfCheckpoint.txt', end='\n')
+        with open('./save/epochOfCheckpoint.txt', 'r') as f:
+            last_epoch = int(f.read())
+            print('### Epoch of checkpoint successfully restored \n'
+                + '### Epoch is {}'.format(last_epoch), end='\n')
+            return last_epoch
+    except:
+        print('### Error while restoring session \n'
+            + '### Continue without restoring \n'
+            + '### WARNING: POSSIBLE ERROR WHILE EVALUATING', end='\n')
+        return 0
+
+
+def saveEpochToFile(epoch):
+    with open('./save/epochOfCheckpoint.txt', 'w') as f:
+        f.write(str(epoch))
+
 
 def saveImageAndNoise(data, z_dim):
     print('### Saving images and noise vectors')
@@ -118,6 +148,7 @@ def saveImageAndNoise(data, z_dim):
     h5f.attrs['z_dim'] = z_dim
     h5f.close()
     print('### Finished saving images and noise vectors')
+
 
 def loadImageAndNoise():
     print('### Loading saved images and noise vectors')
@@ -128,6 +159,7 @@ def loadImageAndNoise():
     h5f.close()
     print('### Finished loading images and noise vectors')
     return images, noise_vectors
+
 
 def plotImage(image_data, height, width, name):
     image_data_reshaped = np.reshape(image_data, (height, width))
