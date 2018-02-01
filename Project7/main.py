@@ -28,7 +28,7 @@ def main(sess, restore=True):
 
     # If you want to evaluate: set train=False and Restore=True
     TRAIN = True
-    RESTORE = True
+    RESTORE = False
 
     mnist = loadDataFromMNIST()
 
@@ -52,34 +52,44 @@ def main(sess, restore=True):
     d__sum = tf.summary.histogram("d_", d_)
     g_sum = tf.summary.image("G", gen_output)
 
+    labels_normal_zero = tf.abs(tf.random_normal(d.shape, stddev=0.3))
+    labels_normal_one = tf.random_normal(d_.shape, mean=1.0, stddev=0.3)
+
     d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.random_uniform(
-            d.shape,
-            minval=0.7,
-            maxval=1.2,
-            dtype=tf.float32,
-            seed=None,
-            name=None
-            )))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=labels_normal_one))
     d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
-            d.shape,
-            minval=0,
-            maxval=0.3,
-            dtype=tf.float32,
-            seed=None,
-            name=None
-            )
-    ))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_zero))
     g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
-            d_.shape,
-            minval=0.7,
-            maxval=1.2,
-            dtype=tf.float32,
-            seed=None,
-            name=None
-            )))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_one))
+
+    # d_loss_real = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.random_uniform(
+    #         d.shape,
+    #         minval=0.7,
+    #         maxval=1.2,
+    #         dtype=tf.float32,
+    #         seed=None,
+    #         name=None
+    #         )))
+    # d_loss_fake = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
+    #         d.shape,
+    #         minval=0,
+    #         maxval=0.3,
+    #         dtype=tf.float32,
+    #         seed=None,
+    #         name=None
+    #         )
+    # ))
+    # g_loss = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
+    #         d_.shape,
+    #         minval=0.7,
+    #         maxval=1.2,
+    #         dtype=tf.float32,
+    #         seed=None,
+    #         name=None
+    #         )))
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -113,8 +123,8 @@ def main(sess, restore=True):
 
     epoch_of_checkpoint = 0
     if RESTORE:
-        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
-        if epoch_of_checkpoint > NUM_EPOCHES:
+        #epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
+        if TRAIN and epoch_of_checkpoint > NUM_EPOCHES:
             print('### WARNING: Max. number of epoches already reached.')
             return
     if TRAIN:
@@ -156,13 +166,19 @@ def main(sess, restore=True):
 
     """ EVALUATING """
     if RESTORE and not TRAIN:
+        print('### EVALUATING')
+        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
         images, labels = mnist.train.next_batch(BATCH_SIZE)
         batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
-        generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
-        saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1),
-                                            z_dim=Z_DIM)
+        #generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
+        #saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1),
+        #                                    z_dim=Z_DIM)
+
+        for i in range(len(generated_images)):
+            plotImage(generated_images[i], 28, 28, str(i) + '-image')
+            plotImage(batch_z[i], 4, 25, str(i) + '-noise')
 
         # for i, image in enumerate(generated_images):
         #     image = np.reshape(image, (28, 28))
