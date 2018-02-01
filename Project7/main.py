@@ -23,7 +23,7 @@ def main(sess, restore=True):
     Z_DIM = 100
 
     # optimizer variables
-    LEARNING_RATE = 0.002
+    LEARNING_RATE = 0.0002
     BETA_1 = 0.5
 
     # If you want to evaluate: set train=False and Restore=True
@@ -118,42 +118,44 @@ def main(sess, restore=True):
             print('### WARNING: Max. number of epoches already reached.')
             return
     if TRAIN:
+        batches_number = int(mnist.train.num_examples / BATCH_SIZE)
         for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
-            images, labels = mnist.train.next_batch(BATCH_SIZE)
-            images = np.reshape(images, (-1, 28, 28, 1))
-            batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
+            iteration = epoch * batches_number
+            for batch_number in xrange(batches_number):
+                images, labels = mnist.train.next_batch(BATCH_SIZE)
+                images = np.reshape(images, (-1, 28, 28, 1))
+                batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
-            _, summary_str = sess.run([d_optim, d_sum],
-                            feed_dict={inputs: images, y: labels, z: batch_z})
-            if epoch % 100 == 0:
-                writer.add_summary(summary_str, epoch)
+                _, summary_str = sess.run([d_optim, d_sum],
+                                feed_dict={inputs: images, y: labels, z: batch_z})
+                if batch_number % 100 == 0:
+                    writer.add_summary(summary_str, iteration + batch_number)
 
-            _, summary_str = sess.run([g_optim, g_sum],
-                            feed_dict={y: labels, z: batch_z})
-            if epoch % 100 == 0:
-                writer.add_summary(summary_str, epoch)
+                _, summary_str = sess.run([g_optim, g_sum],
+                                feed_dict={y: labels, z: batch_z})
+                if batch_number % 100 == 0:
+                    writer.add_summary(summary_str, iteration + batch_number)
 
-            _, summary_str = sess.run([g_optim, g_sum],
-                            feed_dict={y: labels, z: batch_z})
-            if epoch % 100 == 0:
-                writer.add_summary(summary_str, epoch)
+                _, summary_str = sess.run([g_optim, g_sum],
+                                feed_dict={y: labels, z: batch_z})
+                if batch_number % 100 == 0:
+                    writer.add_summary(summary_str, iteration + batch_number)
 
-            if epoch % 100 == 0:
-                errD_fake = d_loss_fake.eval({z: batch_z, y: labels})
-                errD_real = d_loss_real.eval({inputs: images, y: labels})
-                errG = g_loss.eval({z: batch_z, y: labels})
-                print("Epoch: [%2d], d_loss: %.8f, g_loss: %.8f" \
-                    % (epoch, errD_fake+errD_real, errG))
+                if batch_number % 100 == 0:
+                    errD_fake = d_loss_fake.eval({z: batch_z, y: labels})
+                    errD_real = d_loss_real.eval({inputs: images, y: labels})
+                    errG = g_loss.eval({z: batch_z, y: labels})
+                    print("Epoch: [%2d] [%4d / %4d], d_loss: %.8f, g_loss: %.8f" \
+                        % (epoch, batch_number, batches_number, errD_fake+errD_real, errG))
 
-            if epoch % 500 == 0:
-                saver.save(sess, "./save/")
-                saveEpochToFile(epoch)
+            saver.save(sess, "./save/")
+            saveEpochToFile(epoch)
 
         saver.save(sess, "./save/")
         saveEpochToFile(epoch)
 
     """ EVALUATING """
-    elif RESTORE and not TRAIN:
+    if RESTORE and not TRAIN:
         images, labels = mnist.train.next_batch(BATCH_SIZE)
         batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
