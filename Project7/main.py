@@ -114,11 +114,10 @@ def main(sess, restore=True):
     epoch_of_checkpoint = 0
     if RESTORE:
         epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
-    if TRAIN:
         if epoch_of_checkpoint > NUM_EPOCHES:
             print('### WARNING: Max. number of epoches already reached.')
             return
-
+    if TRAIN:
         for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
             images, labels = mnist.train.next_batch(BATCH_SIZE)
             images = np.reshape(images, (-1, 28, 28, 1))
@@ -150,10 +149,10 @@ def main(sess, restore=True):
                 saver.save(sess, "./save/")
                 saveEpochToFile(epoch)
 
-        save_path = saver.save(sess, "./save/")
+        saver.save(sess, "./save/")
         saveEpochToFile(epoch)
 
-
+    """ EVALUATING """
     elif RESTORE and not TRAIN:
         images, labels = mnist.train.next_batch(BATCH_SIZE)
         batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
