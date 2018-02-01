@@ -12,7 +12,7 @@ from six.moves import xrange
 # size of eaach picture: 28 x 28
 def main(sess, restore=True):
     BATCH_SIZE = 64
-    NUM_EPOCHES = 30000
+    NUM_EPOCHES = 25
     INPUT_HEIGHT = 28
     INPUT_WIDTH = 28
     # Color dimension: e.g 1 for grayscale and 3 for RGB
