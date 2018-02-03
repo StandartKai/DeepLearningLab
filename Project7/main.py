@@ -79,7 +79,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     d_vars = [var for var in t_vars if 'd_' in var.name]
     g_vars = [var for var in t_vars if 'g_' in var.name]
 
-    """ train PART """
+    """ TRAIN PART """
 
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(d_loss, var_list=d_vars)
@@ -161,7 +161,6 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
         batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
-                                           z_dim=z_dim)
 
         for i in range(len(generated_images)):
             print('### printing image {} of {}'.format(i, len(generated_images)))
