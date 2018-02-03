@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from ops import *
 
-def generator(z, y, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim=3):
+def generator(z, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim=1024, c_dim=3):
     """
     Args:
       sess: TensorFlow session

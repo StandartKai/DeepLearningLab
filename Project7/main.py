@@ -1,16 +1,18 @@
+import argparse
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import distutils.util as utils
+
 from discriminator import *
 from generator import *
 from ops import loadDataFromMNIST
 from ops import groupLabels
 
-import argparse
-
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 from six.moves import xrange
+
 
 # size of eaach picture: 28 x 28
 def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
@@ -44,7 +46,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     z = tf.placeholder(tf.float32, [None, z_dim], name='z')
     z_sum = tf.summary.histogram('z', z)
 
-    gen_output = generator(z, y, batch_size=batch_size, z_dim=z_dim, output_dim=[input_height, input_width],
+    gen_output = generator(z, batch_size=batch_size, z_dim=z_dim, output_dim=[input_height, input_width],
                             gf_dim=64, gfc_dim=1024, c_dim=c_dim)
 
     # actual images as input
@@ -99,7 +101,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
     epoch_of_checkpoint = 0
     if restore:
-        #epoch_of_checkpoint = tryTorestoreSavedSession(saver, sess)
+        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
         if train and epoch_of_checkpoint > num_epochs:
             print('### WARNING: Max. number of epochs already reached.')
             return
@@ -152,11 +154,10 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     """ EVALUATING """
     if restore and not train:
         print('### EVALUATING')
-        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
         images, labels = mnist.test.next_batch(batch_size)
         batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
-        generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
+        generated_images = gen_output.eval(feed_dict={z: batch_z})
 
         for i in range(len(generated_images)):
             print('### printing image {} of {}'.format(i, len(generated_images)))
@@ -178,13 +179,14 @@ with tf.Session() as sess:
     parser.add_argument("-zd", "--z_dim", default=100)
 
     # parser.add_argument('learning_rate', metavar='LR', type=float, nargs='?', help='learning rate')
-    parser.add_argument("-lr", "--learning_rate", default=0.0002)    
+    parser.add_argument("-lr", "--learning_rate", default=0.0002)
 
     #parser.add_argument('beta_1', metavar='B1', type=float, nargs='?', help='beta_1 learning rate')
-    parser.add_argument("-b", "--beta_1", default=0.5)    parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
+    parser.add_argument("-b", "--beta_1", default=0.5)
+    parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
 
-    parser.add_argument("-tr", "--train", default=False)
-    parser.add_argument("-re", "--restore", default=True)
+    parser.add_argument("-tr", "--train", type=utils.strtobool, default=False)
+    parser.add_argument("-re", "--restore", type=utils.strtobool, default=True)
 
     args = parser.parse_args()
 
