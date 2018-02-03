@@ -27,7 +27,7 @@ def main(sess, restore=True):
     BETA_1 = 0.5
 
     # If you want to evaluate: set train=False and Restore=True
-    TRAIN = False 
+    TRAIN = False
     RESTORE = True
 
     DATA_PATH = './tmp/tensorflow/mnist/mnist_fashion'
@@ -54,7 +54,7 @@ def main(sess, restore=True):
     d__sum = tf.summary.histogram("d_", d_)
     g_sum = tf.summary.image("G", gen_output)
 
-    labels_normal_zero = tf.zeros_like(d) 
+    labels_normal_zero = tf.zeros_like(d)
     labels_normal_one = tf.ones_like(d_)
     # labels_normal_zero = tf.abs(tf.random_normal(d.shape, stddev=0.3))
     # labels_normal_one = tf.random_normal(d_.shape, mean=1.0, stddev=0.3)
@@ -181,6 +181,7 @@ def main(sess, restore=True):
         #                                    z_dim=Z_DIM)
 
         for i in range(len(generated_images)):
+            print('### printing image {} of {}'.format(i, len(generated_images)))
             plotImage(generated_images[i], 28, 28, str(i) + '-image')
             plotImage(batch_z[i], 4, 25, str(i) + '-noise')
 
