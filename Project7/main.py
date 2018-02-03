@@ -134,16 +134,25 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
             print('### WARNING: Max. number of epoches already reached.')
             return
     if train:
-        batches_number = int(mnist.train.num_examples / batch_size)
+        # batches_number = int(mnist.train.num_examples / batch_size)
+        images_train, labels_train = extractShirts(mnist)
+        batches_number = int(images_train.shape[0] / batch_size)
+
         for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
             iteration = epoch * batches_number
             for batch_number in xrange(batches_number):
-                images, labels = mnist.train.next_batch(batch_size)
+                # images, labels = mnist.train.next_batch(batch_size)
+                # hacker detected:
+                if batch_number != (batches_number - 1):
+                    images_batch = images_train[batch_number*batch_size:(batch_number+1)*batch_size]
+                    labels_batch = labels_train[batch_number*batch_size:(batch_number+1)*batch_size]
+                else:
+                    images_batch = images_train[batch_number*batch_size:]
+                    labels_batch = labels_train[batch_number*batch_size:]
 
-                # HACKER DETECTED.
-                labels = groupLabels(labels)
+                images = np.reshape(images_batch, (-1, input_width, input_height, 1))
+                labels = labels_batch
 
-                images = np.reshape(images, (-1, 28, 28, 1))
                 batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
                 _, summary_str = sess.run([d_optim, d_sum],
@@ -215,7 +224,6 @@ with tf.Session() as sess:
 
     parser.add_argument('train', metavar='train', type=bool, nargs='?', help='true if you want to train')
     parser.add_argument('restore', metavar='restore', type=bool, nargs='?', help='true if you want to restore')
-
 
     args = parser.parse_args()
 
