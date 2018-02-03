@@ -161,6 +161,18 @@ def loadImageAndNoise():
     return images, noise_vectors
 
 
+def groupLabels(labels, index=6):
+    new_labels = np.zeros((labels.shape[0], 2))
+    for i in range(labels.shape[0]):
+        # it is a shirt:
+        if labels[i][index] is 1:
+            new_labels[i][1] = 1
+        # or it isn't
+        else:
+            new_labels[i][0] = 1
+    return new_labels
+
+
 def plotImage(image_data, height, width, name):
     image_data_reshaped = np.reshape(image_data, (height, width))
     plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray')

@@ -12,7 +12,7 @@ from six.moves import xrange
 # size of eaach picture: 28 x 28
 def main(sess, restore=True):
     BATCH_SIZE = 64
-    NUM_EPOCHES = 25
+    NUM_EPOCHES = 100
     INPUT_HEIGHT = 28
     INPUT_WIDTH = 28
     # Color dimension: e.g 1 for grayscale and 3 for RGB
@@ -27,10 +27,12 @@ def main(sess, restore=True):
     BETA_1 = 0.5
 
     # If you want to evaluate: set train=False and Restore=True
-    TRAIN = True
-    RESTORE = False
+    TRAIN = False 
+    RESTORE = True
 
-    mnist = loadDataFromMNIST()
+    DATA_PATH = './tmp/tensorflow/mnist/mnist_fashion'
+
+    mnist = loadDataFromMNIST(DATA_PATH)
 
     inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
                         name='real_images')
@@ -52,8 +54,10 @@ def main(sess, restore=True):
     d__sum = tf.summary.histogram("d_", d_)
     g_sum = tf.summary.image("G", gen_output)
 
-    labels_normal_zero = tf.abs(tf.random_normal(d.shape, stddev=0.3))
-    labels_normal_one = tf.random_normal(d_.shape, mean=1.0, stddev=0.3)
+    labels_normal_zero = tf.zeros_like(d) 
+    labels_normal_one = tf.ones_like(d_)
+    # labels_normal_zero = tf.abs(tf.random_normal(d.shape, stddev=0.3))
+    # labels_normal_one = tf.random_normal(d_.shape, mean=1.0, stddev=0.3)
 
     d_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=labels_normal_one))
@@ -168,7 +172,7 @@ def main(sess, restore=True):
     if RESTORE and not TRAIN:
         print('### EVALUATING')
         epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
-        images, labels = mnist.train.next_batch(BATCH_SIZE)
+        images, labels = mnist.test.next_batch(BATCH_SIZE)
         batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
