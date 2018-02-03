@@ -171,47 +171,25 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 with tf.Session() as sess:
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('batch_size', metavar='BS', type=int, nargs='?', help='batch size')
-    parser.add_argument('num_epochs', metavar='NE', type=int, nargs='?', help='number of epochs')
-    parser.add_argument('input_height', metavar='IH', type=int, nargs='?', help='input height')
-    parser.add_argument('input_width', metavar='IW', type=int, nargs='?', help='input width')
+    #parser.add_argument('batch_size', metavar='BS', type=int, nargs='?', help='batch size')
+    parser.add_argument("-bs", "--batch_size", default=64)
+    parser.add_argument("-ne", "--num_epochs", default=100)
+    parser.add_argument("-ih", "--input_height", default=28)
+    parser.add_argument("-iw", "--input_width", default=28)
 
-    parser.add_argument('c_dim', metavar='CDIM', type=int, nargs='?', help='color dimension')
-    parser.add_argument('y_dim', metavar='YDIM', type=int, nargs='?', help='label dimension')
-    parser.add_argument('z_dim', metavar='ZDIM', type=int, nargs='?', help='noise dimension')
+    parser.add_argument("-cd", "--c_dim", default=1)
+    parser.add_argument("-yd", "--y_dim", default=10)
+    parser.add_argument("-zd", "--z_dim", default=100)
 
-    parser.add_argument('learning_rate', metavar='LR', type=int, nargs='?', help='learning rate')
-    parser.add_argument('beta_1', metavar='B1', type=int, nargs='?', help='beta_1 learning rate')
+    parser.add_argument("-lr", "--learning_rate", default=0.0002)
+    parser.add_argument("-bt", "--beta_1", default=0.5)
 
-    parser.add_argument('data_path', metavar='PATH', type=str, nargs='?', help='path to the dataset')
+    parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
 
-    parser.add_argument('train', metavar='train', type=bool, nargs='?', help='true if you want to train')
-    parser.add_argument('restore', metavar='restore', type=bool, nargs='?', help='true if you want to restore')
+    parser.add_argument("-tr", "--train", default=False)
+    parser.add_argument("-re", "--restore", default=True)
 
     args = parser.parse_args()
 
-    # set parameters on custom or default values if not given
-
-    batch_size = 64 if not args.batch_size else args.batch_size
-    num_epochs = 100 if not args.num_epochs else args.num_epochs
-    input_height = 28 if not args.input_height else args.input_height
-    input_width = 28 if not args.input_width else args.input_width
-
-    # Color dimension: e.g 1 for grayscale and 3 for RGB
-    c_dim = 1 if not args.c_dim else args.c_dim
-    # number of dimension of a label
-    y_dim = 10 if not args.y_dim else args.y_dim
-    # number of elements in generator conv2d_transpose
-    z_dim = 100 if not args.z_dim else args.z_dim
-
-    # optimizer variables
-    learning_rate = 0.0002 if not args.learning_rate else args.learning_rate
-    beta_1 = 0.5 if not args.beta_1 else args.beta_1
-
-    data_path = './tmp/tensorflow/mnist/mnist_fashion' if not args.data_path else args.data_path
-
-    train = False if not args.train else args.train
-    restore = True if not args.restore else args.restore
-
-    main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
-         z_dim, learning_rate, beta_1, data_path, train, restore)
+    main(sess, args.batch_size, args.num_epochs, args.input_height, args.input_width, args.c_dim, args.y_dim,
+         args.z_dim, args.learning_rate, args.beta_1, args.data_path, args.train, args.restore)
