@@ -100,31 +100,27 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     epoch_of_checkpoint = 0
     if restore:
         #epoch_of_checkpoint = tryTorestoreSavedSession(saver, sess)
-        if train and epoch_of_checkpoint > NUM_EPOCHES:
-            print('### WARNING: Max. number of epoches already reached.')
+        if train and epoch_of_checkpoint > num_epochs:
+            print('### WARNING: Max. number of epochs already reached.')
             return
     if train:
         # batches_number = int(mnist.train.num_examples / batch_size)
         images_train, labels_train = extractShirts(mnist)
         batches_number = int(images_train.shape[0] / batch_size)
 
-        for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
+        for epoch in xrange(epoch_of_checkpoint, num_epochs):
             iteration = epoch * batches_number
             for batch_number in xrange(batches_number):
                 # images, labels = mnist.train.next_batch(batch_size)
                 # hacker detected:
-                if batch_number != (batches_number - 1):
-                    images_batch = images_train[batch_number*batch_size:(batch_number+1)*batch_size]
-                    labels_batch = labels_train[batch_number*batch_size:(batch_number+1)*batch_size]
-                else:
-                    images_batch = images_train[batch_number*batch_size:]
-                    labels_batch = labels_train[batch_number*batch_size:]
+                images_batch = images_train[batch_number*batch_size:(batch_number+1)*batch_size]
+                labels_batch = labels_train[batch_number*batch_size:(batch_number+1)*batch_size]
 
-                images = np.reshape(images_batch, (-1, input_width, input_height, 1))
+
+                images = np.reshape(images_batch, (-1, input_width, input_height, c_dim))
                 labels = labels_batch
 
                 batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
-
                 _, summary_str = sess.run([d_optim, d_sum],
                                 feed_dict={inputs: images, y: labels, z: batch_z})
                 if batch_number % 100 == 0:
@@ -181,8 +177,8 @@ with tf.Session() as sess:
     parser.add_argument("-yd", "--y_dim", default=10)
     parser.add_argument("-zd", "--z_dim", default=100)
 
-    parser.add_argument("-lr", "--learning_rate", default=0.0002)
-    parser.add_argument("-bt", "--beta_1", default=0.5)
+    parser.add_argument('learning_rate', metavar='LR', type=float, nargs='?', help='learning rate')
+    parser.add_argument('beta_1', metavar='B1', type=float, nargs='?', help='beta_1 learning rate')
 
     parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
 

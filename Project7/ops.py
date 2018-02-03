@@ -179,7 +179,10 @@ def extractShirts(mnist, index=6):
     images = mnist.train.images
     labels = mnist.train.labels
     idx = [i for i in range((len(labels))) if labels[i][6] == 1]
-    return images[idx], labels[idx]
+
+    images_shirt = images[idx]
+    labels_shirt = np.ones((len(labels), 1))
+    return images_shirt, labels_shirt
 
 
 def plotImage(image_data, height, width, name):
