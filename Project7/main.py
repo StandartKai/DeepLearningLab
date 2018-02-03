@@ -193,8 +193,3 @@ def main(sess, restore=True):
 
 with tf.Session() as sess:
     main(sess)
-
-    #images, noises = loadImageAndNoise()
-    # for i in range(len(images)):
-    #     saveImage(images[i], 28, 28, str(i) + '-image')
-    #     saveImage(noises[i], 4, 25, str(i) + '-noise')

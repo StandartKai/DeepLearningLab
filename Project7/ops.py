@@ -162,12 +162,12 @@ def loadImageAndNoise():
 
 
 def groupLabels(labels, index=6):
-    print('### Grouping Labels from a vector of size {}'.format(labels.shape[1])
-          ' to a vector of size 2', end='\n')
+    print('### Grouping Labels from a vector of size {}'.format(labels.shape[1]))
+    print(' to a vector of size 2 \n')
     new_labels = np.zeros((labels.shape[0], 2))
     for i in range(labels.shape[0]):
         # it is a shirt:
-        if labels[i][index] is 1:
+        if labels[i][index] == 1:
             new_labels[i][1] = 1
         # or it isn't
         else:
