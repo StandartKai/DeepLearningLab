@@ -16,6 +16,24 @@ from six.moves import xrange
 def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
          z_dim, learning_rate, beta_1, data_path, train, restore):
 
+    print("________________________________________")
+    print("called main with settings: ")
+    print("________________________________________")
+    print("batch_size: " + str(batch_size))
+    print("num_epochs: " + str(num_epochs))
+    print("input_height: " + str(input_height))
+    print("input_width: " + str(input_width))
+    print("c_dim: " + str(c_dim))
+    print("y_dim: " + str(y_dim))
+    print("z_dim: " + str(z_dim))
+    print("learning_rate: " + str(learning_rate))
+    print("beta_1: " + str(beta_1))
+    print("data_path: " + str(data_path))
+    print("train: " + str(train))
+    print("restore: " + str(restore))
+    print("________________________________________")
+
+
     mnist = loadDataFromMNIST()
 
     inputs = tf.placeholder(tf.float32, [batch_size, input_height, input_width, c_dim],
