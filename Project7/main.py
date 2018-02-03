@@ -177,10 +177,11 @@ with tf.Session() as sess:
     parser.add_argument("-yd", "--y_dim", default=10)
     parser.add_argument("-zd", "--z_dim", default=100)
 
-    parser.add_argument('learning_rate', metavar='LR', type=float, nargs='?', help='learning rate')
-    parser.add_argument('beta_1', metavar='B1', type=float, nargs='?', help='beta_1 learning rate')
+    # parser.add_argument('learning_rate', metavar='LR', type=float, nargs='?', help='learning rate')
+    parser.add_argument("-lr", "--learning_rate", default=0.0002)    
 
-    parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
+    #parser.add_argument('beta_1', metavar='B1', type=float, nargs='?', help='beta_1 learning rate')
+    parser.add_argument("-b", "--beta_1", default=0.5)    parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
 
     parser.add_argument("-tr", "--train", default=False)
     parser.add_argument("-re", "--restore", default=True)
