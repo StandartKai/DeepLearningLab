@@ -175,6 +175,13 @@ def groupLabels(labels, index=6):
     return new_labels
 
 
+def extractShirts(mnist, index=6):
+    images = mnist.train.images
+    labels = mnist.train.labels
+    idx = [i for i in range((len(labels))) if labels[i][6] == 1]
+    return images[idx], labels[idx]
+
+
 def plotImage(image_data, height, width, name):
     image_data_reshaped = np.reshape(image_data, (height, width))
     plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray')

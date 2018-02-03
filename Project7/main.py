@@ -1,6 +1,7 @@
 from discriminator import *
 from generator import *
 from ops import loadDataFromMNIST
+from ops import groupLabels
 
 import numpy as np
 import matplotlib
@@ -18,7 +19,7 @@ def main(sess, restore=True):
     # Color dimension: e.g 1 for grayscale and 3 for RGB
     C_DIM = 1
     # number of dimension of a label
-    Y_DIM = 10
+    Y_DIM = 2
     # number of elements in generator conv2d_transpose
     Z_DIM = 100
 
@@ -27,8 +28,8 @@ def main(sess, restore=True):
     BETA_1 = 0.5
 
     # If you want to evaluate: set train=False and Restore=True
-    TRAIN = False
-    RESTORE = True
+    TRAIN = True
+    RESTORE = False
 
     DATA_PATH = './tmp/tensorflow/mnist/mnist_fashion'
 
@@ -137,6 +138,10 @@ def main(sess, restore=True):
             iteration = epoch * batches_number
             for batch_number in xrange(batches_number):
                 images, labels = mnist.train.next_batch(BATCH_SIZE)
+
+                # HACKER DETECTED.
+                labels = groupLabels(labels)
+
                 images = np.reshape(images, (-1, 28, 28, 1))
                 batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
 
