@@ -3,6 +3,8 @@ from generator import *
 from ops import loadDataFromMNIST
 from ops import groupLabels
 
+import argparse
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -11,40 +13,21 @@ import matplotlib.pyplot as plt
 from six.moves import xrange
 
 # size of eaach picture: 28 x 28
-def main(sess, restore=True):
-    BATCH_SIZE = 64
-    NUM_EPOCHES = 100
-    INPUT_HEIGHT = 28
-    INPUT_WIDTH = 28
-    # Color dimension: e.g 1 for grayscale and 3 for RGB
-    C_DIM = 1
-    # number of dimension of a label
-    Y_DIM = 2
-    # number of elements in generator conv2d_transpose
-    Z_DIM = 100
+def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
+         z_dim, learning_rate, beta_1, data_path, train, restore):
 
-    # optimizer variables
-    LEARNING_RATE = 0.0002
-    BETA_1 = 0.5
+    mnist = loadDataFromMNIST()
 
-    # If you want to evaluate: set train=False and Restore=True
-    TRAIN = True
-    RESTORE = False
-
-    DATA_PATH = './tmp/tensorflow/mnist/mnist_fashion'
-
-    mnist = loadDataFromMNIST(DATA_PATH)
-
-    inputs = tf.placeholder(tf.float32, [BATCH_SIZE, INPUT_HEIGHT, INPUT_WIDTH, C_DIM],
+    inputs = tf.placeholder(tf.float32, [batch_size, input_height, input_width, c_dim],
                         name='real_images')
-    y = tf.placeholder(tf.float32, [BATCH_SIZE, Y_DIM], name='y')
+    y = tf.placeholder(tf.float32, [batch_size, y_dim], name='y')
 
     # noise / seed
-    z = tf.placeholder(tf.float32, [None, Z_DIM], name='z')
+    z = tf.placeholder(tf.float32, [None, z_dim], name='z')
     z_sum = tf.summary.histogram('z', z)
 
-    gen_output = generator(z, y, batch_size=BATCH_SIZE, z_dim=Z_DIM, output_dim=[INPUT_HEIGHT, INPUT_WIDTH],
-                            gf_dim=64, gfc_dim=1024, c_dim=C_DIM)
+    gen_output = generator(z, y, batch_size=batch_size, z_dim=z_dim, output_dim=[input_height, input_width],
+                            gf_dim=64, gfc_dim=1024, c_dim=c_dim)
 
     # actual images as input
     d, d_logits = discriminator(inputs, reuse=False)
@@ -108,11 +91,11 @@ def main(sess, restore=True):
     d_vars = [var for var in t_vars if 'd_' in var.name]
     g_vars = [var for var in t_vars if 'g_' in var.name]
 
-    """ TRAIN PART """
+    """ train PART """
 
-    d_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
+    d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(d_loss, var_list=d_vars)
-    g_optim = tf.train.AdamOptimizer(LEARNING_RATE, beta1=BETA_1) \
+    g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(g_loss, var_list=g_vars)
 
     init_vars()
@@ -127,23 +110,23 @@ def main(sess, restore=True):
     writer = tf.summary.FileWriter('./logs', sess.graph)
 
     epoch_of_checkpoint = 0
-    if RESTORE:
-        #epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
-        if TRAIN and epoch_of_checkpoint > NUM_EPOCHES:
+    if restore:
+        #epoch_of_checkpoint = tryTorestoreSavedSession(saver, sess)
+        if train and epoch_of_checkpoint > NUM_EPOCHES:
             print('### WARNING: Max. number of epoches already reached.')
             return
-    if TRAIN:
-        batches_number = int(mnist.train.num_examples / BATCH_SIZE)
+    if train:
+        batches_number = int(mnist.train.num_examples / batch_size)
         for epoch in xrange(epoch_of_checkpoint, NUM_EPOCHES):
             iteration = epoch * batches_number
             for batch_number in xrange(batches_number):
-                images, labels = mnist.train.next_batch(BATCH_SIZE)
+                images, labels = mnist.train.next_batch(batch_size)
 
                 # HACKER DETECTED.
                 labels = groupLabels(labels)
 
                 images = np.reshape(images, (-1, 28, 28, 1))
-                batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
+                batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
                 _, summary_str = sess.run([d_optim, d_sum],
                                 feed_dict={inputs: images, y: labels, z: batch_z})
@@ -174,16 +157,16 @@ def main(sess, restore=True):
         saveEpochToFile(epoch)
 
     """ EVALUATING """
-    if RESTORE and not TRAIN:
+    if restore and not train:
         print('### EVALUATING')
         epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
-        images, labels = mnist.test.next_batch(BATCH_SIZE)
-        batch_z = np.random.uniform(-1, 1, size=(BATCH_SIZE , Z_DIM))
+        images, labels = mnist.test.next_batch(batch_size)
+        batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
-        #generated_images_flat = np.reshape(generated_images, (BATCH_SIZE, -1))
+        #generated_images_flat = np.reshape(generated_images, (batch_size, -1))
         #saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1),
-        #                                    z_dim=Z_DIM)
+        #                                    z_dim=z_dim)
 
         for i in range(len(generated_images)):
             print('### printing image {} of {}'.format(i, len(generated_images)))
@@ -197,4 +180,52 @@ def main(sess, restore=True):
 
 
 with tf.Session() as sess:
-    main(sess)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('batch_size', metavar='BS', type=int, nargs='?', help='batch size')
+    parser.add_argument('num_epochs', metavar='NE', type=int, nargs='?', help='number of epochs')
+    parser.add_argument('input_height', metavar='IH', type=int, nargs='?', help='input height')
+    parser.add_argument('input_width', metavar='IW', type=int, nargs='?', help='input width')
+
+    parser.add_argument('c_dim', metavar='CDIM', type=int, nargs='?', help='color dimension')
+    parser.add_argument('y_dim', metavar='YDIM', type=int, nargs='?', help='label dimension')
+    parser.add_argument('z_dim', metavar='ZDIM', type=int, nargs='?', help='noise dimension')
+
+    parser.add_argument('learning_rate', metavar='LR', type=int, nargs='?', help='learning rate')
+    parser.add_argument('beta_1', metavar='B1', type=int, nargs='?', help='beta_1 learning rate')
+
+    parser.add_argument('data_path', metavar='PATH', type=str, nargs='?', help='path to the dataset')
+
+    parser.add_argument('train', metavar='train', type=bool, nargs='?', help='true if you want to train')
+    parser.add_argument('restore', metavar='restore', type=bool, nargs='?', help='true if you want to restore')
+
+
+    args = parser.parse_args()
+
+    batch_size = 64 if not args.batch_size else args.batch_size
+    num_epochs = 100 if not args.num_epochs else args.num_epochs
+    input_height = 28 if not args.input_height else args.input_height
+    input_width = 28 if not args.input_width else args.input_width
+
+    # Color dimension: e.g 1 for grayscale and 3 for RGB
+    c_dim = 1 if not args.c_dim else args.c_dim
+    # number of dimension of a label
+    y_dim = 10 if not args.y_dim else args.y_dim
+    # number of elements in generator conv2d_transpose
+    z_dim = 100 if not args.z_dim else args.z_dim
+
+    # optimizer variables
+    learning_rate = 0.0002 if not args.learning_rate else args.learning_rate
+    beta_1 = 0.5 if not args.beta_1 else args.beta_1
+
+    data_path = './tmp/tensorflow/mnist/mnist_fashion' if not args.data_path else args.data_path
+
+    train = False if not args.train else args.train
+    restore = True if not args.restore else args.restore
+
+    main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
+         z_dim, learning_rate, beta_1, data_path, train, restore)
+
+    #images, noises = loadImageAndNoise()
+    # for i in range(len(images)):
+    #     saveImage(images[i], 28, 28, str(i) + '-image')
+    #     saveImage(noises[i], 4, 25, str(i) + '-noise')
