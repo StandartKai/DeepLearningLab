@@ -190,5 +190,7 @@ with tf.Session() as sess:
 
     args = parser.parse_args()
 
-    main(sess, args.batch_size, args.num_epochs, args.input_height, args.input_width, args.c_dim, args.y_dim,
-         args.z_dim, args.learning_rate, args.beta_1, args.data_path, args.train, args.restore)
+    main(sess, int(args.batch_size), int(args.num_epochs), int(args.input_height),
+        int(args.input_width), int(args.c_dim), int(args.y_dim),
+        int(args.z_dim), float(args.learning_rate), float(args.beta_1),
+        args.data_path, args.train, args.restore)
