@@ -58,8 +58,6 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
     labels_normal_zero = tf.zeros_like(d)
     labels_normal_one = tf.ones_like(d_)
-    # labels_normal_zero = tf.abs(tf.random_normal(d.shape, stddev=0.3))
-    # labels_normal_one = tf.random_normal(d_.shape, mean=1.0, stddev=0.3)
 
     d_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=labels_normal_one))
@@ -68,34 +66,6 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_one))
 
-    # d_loss_real = tf.reduce_mean(
-    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=tf.random_uniform(
-    #         d.shape,
-    #         minval=0.7,
-    #         maxval=1.2,
-    #         dtype=tf.float32,
-    #         seed=None,
-    #         name=None
-    #         )))
-    # d_loss_fake = tf.reduce_mean(
-    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
-    #         d.shape,
-    #         minval=0,
-    #         maxval=0.3,
-    #         dtype=tf.float32,
-    #         seed=None,
-    #         name=None
-    #         )
-    # ))
-    # g_loss = tf.reduce_mean(
-    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=tf.random_uniform(
-    #         d_.shape,
-    #         minval=0.7,
-    #         maxval=1.2,
-    #         dtype=tf.float32,
-    #         seed=None,
-    #         name=None
-    #         )))
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -191,22 +161,16 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
         batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
 
         generated_images = gen_output.eval(feed_dict={z: batch_z, y: labels})
-        #generated_images_flat = np.reshape(generated_images, (batch_size, -1))
-        #saveImageAndNoise(np.concatenate((generated_images_flat, batch_z), axis=1),
-        #                                    z_dim=z_dim)
+                                           z_dim=z_dim)
 
         for i in range(len(generated_images)):
             print('### printing image {} of {}'.format(i, len(generated_images)))
             plotImage(generated_images[i], 28, 28, str(i) + '-image')
             plotImage(batch_z[i], 4, 25, str(i) + '-noise')
 
-        # for i, image in enumerate(generated_images):
-        #     image = np.reshape(image, (28, 28))
-        #     plt.imshow(image, vmin=0, vmax=1, cmap='gray')
-        #     plt.savefig('./pictures/' + str(i) + '.png')
-
 
 with tf.Session() as sess:
+    # parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('batch_size', metavar='BS', type=int, nargs='?', help='batch size')
     parser.add_argument('num_epochs', metavar='NE', type=int, nargs='?', help='number of epochs')
@@ -226,6 +190,8 @@ with tf.Session() as sess:
     parser.add_argument('restore', metavar='restore', type=bool, nargs='?', help='true if you want to restore')
 
     args = parser.parse_args()
+
+    # set parameters on custom or default values if not given
 
     batch_size = 64 if not args.batch_size else args.batch_size
     num_epochs = 100 if not args.num_epochs else args.num_epochs
@@ -250,8 +216,3 @@ with tf.Session() as sess:
 
     main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
          z_dim, learning_rate, beta_1, data_path, train, restore)
-
-    #images, noises = loadImageAndNoise()
-    # for i in range(len(images)):
-    #     saveImage(images[i], 28, 28, str(i) + '-image')
-    #     saveImage(noises[i], 4, 25, str(i) + '-noise')
