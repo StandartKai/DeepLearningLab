@@ -154,37 +154,33 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     """ EVALUATING """
     if restore and not train:
         print('### EVALUATING')
-        images, labels = mnist.test.next_batch(batch_size)
-        batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
+        assert z_dim % 4 == 0
 
+        batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
         generated_images = gen_output.eval(feed_dict={z: batch_z})
 
+        batch_z_flat = np.reshape(batch_z, (-1, 4, int(z_dim/4)))
+        generated_images_flat = np.reshape(generated_images, (-1, input_height, input_height))
+
         for i in range(len(generated_images)):
-            print('### printing image {} of {}'.format(i, len(generated_images)))
-            plotImage(generated_images[i], 28, 28, str(i) + '-image')
-            plotImage(batch_z[i], 4, 25, str(i) + '-noise')
+            print('### printing image {} of {}'.format(i, len(generated_images_flat)))
+            plotImage(generated_images_flat[i], str(i) + '-image')
+            plotImage(batch_z_flat[i], str(i) + '-noise')
 
 
 with tf.Session() as sess:
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    #parser.add_argument('batch_size', metavar='BS', type=int, nargs='?', help='batch size')
     parser.add_argument("-bs", "--batch_size", default=64)
     parser.add_argument("-ne", "--num_epochs", default=100)
     parser.add_argument("-ih", "--input_height", default=28)
     parser.add_argument("-iw", "--input_width", default=28)
-
     parser.add_argument("-cd", "--c_dim", default=1)
     parser.add_argument("-yd", "--y_dim", default=10)
     parser.add_argument("-zd", "--z_dim", default=100)
-
-    # parser.add_argument('learning_rate', metavar='LR', type=float, nargs='?', help='learning rate')
     parser.add_argument("-lr", "--learning_rate", default=0.0002)
-
-    #parser.add_argument('beta_1', metavar='B1', type=float, nargs='?', help='beta_1 learning rate')
     parser.add_argument("-b", "--beta_1", default=0.5)
     parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
-
     parser.add_argument("-tr", "--train", type=utils.strtobool, default=False)
     parser.add_argument("-re", "--restore", type=utils.strtobool, default=True)
 
