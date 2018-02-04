@@ -187,5 +187,5 @@ def extractShirts(mnist, index=6):
 
 def plotImage(image_data, height, width, name):
     image_data_reshaped = np.reshape(image_data, (height, width))
-    plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray')
+    plt.imshow(image_data_reshaped, vmin=0, vmax=1, cmap='gray', interpolation='none')
     plt.savefig('./pictures/' + name + '.png')

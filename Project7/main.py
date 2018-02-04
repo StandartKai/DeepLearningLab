@@ -36,7 +36,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     print("________________________________________")
 
 
-    mnist = loadDataFromMNIST()
+    mnist = loadDataFromMNIST(data_path)
 
     inputs = tf.placeholder(tf.float32, [batch_size, input_height, input_width, c_dim],
                         name='real_images')
