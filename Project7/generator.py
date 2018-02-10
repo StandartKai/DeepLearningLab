@@ -43,24 +43,28 @@ def generator(z, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim
         # use normaliziation and relu.
         h0 = tf.nn.relu(g_bn0(h0))
         h0 = tf.layers.dropout(inputs=h0, rate=0.5)
+        print("generator h0")
         print(h0.shape)
 
         h1, h1_w, h1_b = deconv2d(h0, [batch_size, s_h8, s_w8, gf_dim * 4],
                                     name='g_h1', with_w=True)
         h1 = tf.nn.relu(g_bn1(h1))
         h1 = tf.layers.dropout(inputs=h1, rate=0.5)
+        print("generator h1")
         print(h1.shape)
 
         h2, h2_w, h2_b = deconv2d(h1, [batch_size, s_h4, s_w4, gf_dim * 2],
                                     name='g_h2', with_w=True)
         h2 = tf.nn.relu(g_bn2(h2))
         h2 = tf.layers.dropout(inputs=h2, rate=0.5)
+        print("generator h2")
         print(h2.shape)
 
         h3, h3_w, h3_b = deconv2d(h2, [batch_size, s_h2, s_w2, gf_dim * 1],
                                     name='g_h3', with_w=True)
         h3 = tf.nn.relu(g_bn3(h3))
         h3 = tf.layers.dropout(inputs=h3, rate=0.5)
+        print("generator h3")
         print(h3.shape)
 
         h4, h4_w, h4_b = deconv2d(h3, [batch_size, s_h, s_w, c_dim],
