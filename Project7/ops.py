@@ -150,13 +150,18 @@ def saveImageAndNoise(data, z_dim):
     print('### Finished saving images and noise vectors')
 
 
-def loadImageAndNoise():
+def loadData(file_name, data_name, with_noise=False):
+    # File name for deepfashion data is "data_fashion.h5"
+    # Dataset name for deepfashion data is "images_fashion"
+
     print('### Loading saved images and noise vectors')
-    h5f = h5py.File('data.h5', 'r')
-    data = h5f['image_with_noise'][:]
-    z_dim = h5f.attrs['z_dim']
-    images, noise_vectors = data[:,:-z_dim], data[:,-z_dim:]
-    h5f.close()
+    h5f = h5py.File(file_name, 'r')
+    data = h5f[data_name][:]
+    if with_noise:
+        z_dim = h5f.attrs['z_dim']
+        images, noise_vectors = data[:,:-z_dim], data[:,-z_dim:]
+    else:
+        images, noise_vectors = data, None
     print('### Finished loading images and noise vectors')
     return images, noise_vectors
 
@@ -186,6 +191,9 @@ def extractShirts(mnist, index=6):
 
 
 def plotImage(image_data, name):
-    #image_data_reshaped = np.reshape(image_data, (height, width))
-    plt.imshow(image_data, vmin=0, vmax=1, cmap='gray', interpolation='none')
+    if image_data.ndim == 2:
+        v_min, v_max = 0, 1
+    else:
+        v_min, v_max = 0, 255
+    plt.imshow(image_data, vmin=v_min, vmax=v_max, cmap='gray', interpolation='none')
     plt.savefig('./pictures/' + name + '.png')

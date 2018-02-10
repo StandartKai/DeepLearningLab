@@ -16,7 +16,7 @@ from six.moves import xrange
 
 # size of eaach picture: 28 x 28
 def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
-         z_dim, learning_rate, beta_1, data_path, train, restore):
+         z_dim, learning_rate, beta_1, data_type, data_path, train, restore):
 
     print("________________________________________")
     print("called main with settings: ")
@@ -30,13 +30,16 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     print("z_dim: " + str(z_dim))
     print("learning_rate: " + str(learning_rate))
     print("beta_1: " + str(beta_1))
+    print("data_type: " + str(data_type))
     print("data_path: " + str(data_path))
     print("train: " + str(train))
     print("restore: " + str(restore))
     print("________________________________________")
 
 
-    mnist = loadDataFromMNIST(data_path)
+    if (data_type == 'mnist' or data_type == 'mnist_fashion'):
+        mnist = loadDataFromMNIST(data_path)
+
 
     inputs = tf.placeholder(tf.float32, [batch_size, input_height, input_width, c_dim],
                         name='real_images')
@@ -106,42 +109,56 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
             print('### WARNING: Max. number of epochs already reached.')
             return
     if train:
-        # batches_number = int(mnist.train.num_examples / batch_size)
-        images_train, labels_train = extractShirts(mnist)
-        batches_number = int(images_train.shape[0] / batch_size)
+        images_train, labels_train = None, None
+        batches_number = 0
+        if (data_type == 'mnist' or data_type == 'mnist_fashion'):
+            batches_number = int(mnist.train.num_examples / batch_size)
+            if (data_type == 'mnist_fashion'):
+                images_train, labels_train = extractShirts(mnist)
+        if (data_type == 'deep_fashion'):
+            #images_train, _ = loadData("data_fashion.h5", "images_fashion", False)
+            images_train, _ = loadData(data_path, "images_fashion", False)
+            labels_train = np.ones((images_train.shape[0], 1))
+            batches_number = int(images_train.shape[0] / batch_size)
+
+        if (data_type != 'mnist'):
+            assert images_train is not None
+            assert labels_train is not None
+        assert batches_number != 0
 
         for epoch in xrange(epoch_of_checkpoint, num_epochs):
             iteration = epoch * batches_number
             for batch_number in xrange(batches_number):
-                # images, labels = mnist.train.next_batch(batch_size)
-                # hacker detected:
-                images_batch = images_train[batch_number*batch_size:(batch_number+1)*batch_size]
-                labels_batch = labels_train[batch_number*batch_size:(batch_number+1)*batch_size]
+                if (data_type == 'mnist'):
+                    images_batch, labels_batch = mnist.train.next_batch(batch_size)
+                else:
+                    images_batch = images_train[batch_number*batch_size:(batch_number+1)*batch_size]
+                    labels_batch = labels_train[batch_number*batch_size:(batch_number+1)*batch_size]
 
 
-                images = np.reshape(images_batch, (-1, input_width, input_height, c_dim))
-                labels = labels_batch
+                images_batch = np.reshape(images_batch, (-1, input_width, input_height, c_dim))
 
                 batch_z = np.random.uniform(-1, 1, size=(batch_size , z_dim))
+
                 _, summary_str = sess.run([d_optim, d_sum],
-                                feed_dict={inputs: images, y: labels, z: batch_z})
+                                feed_dict={inputs: images_batch, y: labels_batch, z: batch_z})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
                 _, summary_str = sess.run([g_optim, g_sum],
-                                feed_dict={y: labels, z: batch_z})
+                                feed_dict={y: labels_batch, z: batch_z})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
                 _, summary_str = sess.run([g_optim, g_sum],
-                                feed_dict={y: labels, z: batch_z})
+                                feed_dict={y: labels_batch, z: batch_z})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
                 if batch_number % 100 == 0:
-                    errD_fake = d_loss_fake.eval({z: batch_z, y: labels})
-                    errD_real = d_loss_real.eval({inputs: images, y: labels})
-                    errG = g_loss.eval({z: batch_z, y: labels})
+                    errD_fake = d_loss_fake.eval({z: batch_z, y: labels_batch})
+                    errD_real = d_loss_real.eval({inputs: images_batch, y: labels_batch})
+                    errG = g_loss.eval({z: batch_z, y: labels_batch})
                     print("Epoch: [%2d] [%4d / %4d], d_loss: %.8f, g_loss: %.8f" \
                         % (epoch, batch_number, batches_number, errD_fake+errD_real, errG))
 
@@ -160,7 +177,12 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
         generated_images = gen_output.eval(feed_dict={z: batch_z})
 
         batch_z_flat = np.reshape(batch_z, (-1, 4, int(z_dim/4)))
-        generated_images_flat = np.reshape(generated_images, (-1, input_height, input_height))
+        if c_dim == 1:
+            generated_images_flat = np.reshape(
+                    generated_images, (-1, input_height, input_height))
+        else:
+            generated_images_flat = np.reshape(
+                generated_images, (-1, input_height, input_height, c_dim))
 
         for i in range(len(generated_images)):
             print('### printing image {} of {}'.format(i, len(generated_images_flat)))
@@ -180,6 +202,7 @@ with tf.Session() as sess:
     parser.add_argument("-zd", "--z_dim", default=100)
     parser.add_argument("-lr", "--learning_rate", default=0.0002)
     parser.add_argument("-b", "--beta_1", default=0.5)
+    parser.add_argument("-dt", "--data_type", type=str, default='mnist')
     parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
     parser.add_argument("-tr", "--train", type=utils.strtobool, default=False)
     parser.add_argument("-re", "--restore", type=utils.strtobool, default=True)
@@ -188,5 +211,5 @@ with tf.Session() as sess:
 
     main(sess, int(args.batch_size), int(args.num_epochs), int(args.input_height),
         int(args.input_width), int(args.c_dim), int(args.y_dim),
-        int(args.z_dim), float(args.learning_rate), float(args.beta_1),
+        int(args.z_dim), float(args.learning_rate), float(args.beta_1), args.data_type,
         args.data_path, args.train, args.restore)
