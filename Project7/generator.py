@@ -69,4 +69,4 @@ def generator(z, batch_size, z_dim=100, output_dim=[300,300], gf_dim=64, gfc_dim
 
         h4, h4_w, h4_b = deconv2d(h3, [batch_size, s_h, s_w, c_dim],
                                     name='g_h4', with_w=True)
-        return tf.layers.dropout(inputs=tf.nn.tanh(h4), rate=0.5)
+        return tf.layers.dropout(inputs=tf.nn.tanh(h4), rate=0.5), h2

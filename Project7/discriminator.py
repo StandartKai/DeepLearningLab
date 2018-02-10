@@ -27,4 +27,4 @@ def discriminator(image, reuse, num_filters=64, batch_size=64):
         h4 = linear(tf.reshape(h3, [batch_size, -1]), 1, 'd_h3_lin')
         print("discriminator h4")
         print(h4.shape)
-        return tf.nn.sigmoid(h4), h4
+        return tf.nn.sigmoid(h4), h4, h1

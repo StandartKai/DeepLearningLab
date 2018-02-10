@@ -49,13 +49,13 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     z = tf.placeholder(tf.float32, [None, z_dim], name='z')
     z_sum = tf.summary.histogram('z', z)
 
-    gen_output = generator(z, batch_size=batch_size, z_dim=z_dim, output_dim=[input_height, input_width],
+    gen_output, gen_intermediate = generator(z, batch_size=batch_size, z_dim=z_dim, output_dim=[input_height, input_width],
                             gf_dim=64, gfc_dim=1024, c_dim=c_dim)
 
     # actual images as input
-    d, d_logits = discriminator(inputs, reuse=False)
+    d, d_logits, d_intermediate = discriminator(inputs, reuse=False)
     # generated, "fake" images as input
-    d_, d_logits_ = discriminator(gen_output, reuse=True)
+    d_, d_logits_, d_intermediate_ = discriminator(gen_output, reuse=True)
 
     d_sum = tf.summary.histogram("d", d)
     d__sum = tf.summary.histogram("d_", d_)
@@ -71,6 +71,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_one))
 
+    g_cost = tf.sqrt(tf.reduce_sum(tf.pow(d_intermediate-d_intermediate_, 2)))
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -88,14 +89,16 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(d_loss, var_list=d_vars)
+    # g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
+                # .minimize(g_loss, var_list=g_vars)
     g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
-                .minimize(g_loss, var_list=g_vars)
+                .minimize(g_cost, var_list=g_vars)
 
     init_vars()
     saver = tf.train.Saver()
 
     #g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
-    g_sum = tf.summary.merge([g_sum, d_loss_fake_sum, g_loss_sum])
+    g_sum = tf.summary.merge([g_sum, g_cost, d_loss_fake_sum, g_loss_sum])
 
     #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
@@ -145,8 +148,8 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
-                _, summary_str = sess.run([g_optim, g_sum],
-                                feed_dict={y: labels_batch, z: batch_z})
+                _, summary_str = sess.run([g_optim, g_cost],
+                                feed_dict={y: labels_batch, z: batch_z, inputs: images_batch})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
