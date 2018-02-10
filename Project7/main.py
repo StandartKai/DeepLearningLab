@@ -99,7 +99,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     saver = tf.train.Saver()
 
     #g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
-    g_sum = tf.summary.merge([g_sum, g_cost_sum, g_loss_sum, d_loss_fake_sum, g_loss_sum])
+    g_sum = tf.summary.merge([g_sum, g_cost_sum, d_loss_fake_sum, g_loss_sum])
 
     #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
@@ -149,13 +149,15 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
-                _, summary_str = sess.run([g_optim, g_cost],
+                _, summary_str = sess.run([g_cost, g_optim],
                                 feed_dict={y: labels_batch, z: batch_z, inputs: images_batch})
+
                 if batch_number % 100 == 0:
+                    print(summary_str)
                     writer.add_summary(summary_str, iteration + batch_number)
 
-                _, summary_str = sess.run([g_optim, g_sum],
-                                feed_dict={y: labels_batch, z: batch_z})
+                _, summary_str = sess.run([g_cost, g_optim],
+                                feed_dict={y: labels_batch, z: batch_z, inputs: images_batch})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
