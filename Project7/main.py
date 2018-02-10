@@ -86,6 +86,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     d_vars = [var for var in t_vars if 'd_' in var.name]
     g_vars = [var for var in t_vars if 'g_' in var.name]
 
+
     """ TRAIN PART """
 
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
@@ -149,15 +150,14 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
-                _, summary_str = sess.run([g_cost, g_optim],
-                                feed_dict={y: labels_batch, z: batch_z, inputs: images_batch})
+                _, summary_str = sess.run([g_optim, g_sum],
+                                feed_dict={z: batch_z, inputs: images_batch})
 
                 if batch_number % 100 == 0:
-                    print(summary_str)
                     writer.add_summary(summary_str, iteration + batch_number)
 
-                _, summary_str = sess.run([g_cost, g_optim],
-                                feed_dict={y: labels_batch, z: batch_z, inputs: images_batch})
+                _, summary_str = sess.run([g_optim, g_sum],
+                                feed_dict={z: batch_z, inputs: images_batch})
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
@@ -165,8 +165,9 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                     errD_fake = d_loss_fake.eval({z: batch_z, y: labels_batch})
                     errD_real = d_loss_real.eval({inputs: images_batch, y: labels_batch})
                     errG = g_loss.eval({z: batch_z, y: labels_batch})
-                    print("Epoch: [%2d] [%4d / %4d], d_loss: %.8f, g_loss: %.8f" \
-                        % (epoch, batch_number, batches_number, errD_fake+errD_real, errG))
+                    errG_cost = g_cost.eval({inputs: images_batch, z: batch_z, y: labels_batch})
+                    print("Epoch: [%2d] [%4d / %4d], d_loss: %.8f, g_loss: %.8f, g_cost: %.8f" \
+                        % (epoch, batch_number, batches_number, errD_fake+errD_real, errG, errG_cost))
 
             saver.save(sess, "./save/")
             saveEpochToFile(epoch)
