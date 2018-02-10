@@ -72,6 +72,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_one))
 
     g_cost = tf.sqrt(tf.reduce_sum(tf.pow(d_intermediate-d_intermediate_, 2)))
+    g_cost_sum = tf.summary.scalar("g_cost_sum", g_cost)
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -98,7 +99,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     saver = tf.train.Saver()
 
     #g_sum = tf.summary.merge([z_sum, d__sum, g_sum, d_loss_fake_sum, g_loss_sum])
-    g_sum = tf.summary.merge([g_sum, g_cost, d_loss_fake_sum, g_loss_sum])
+    g_sum = tf.summary.merge([g_sum, g_cost_sum, g_loss_sum, d_loss_fake_sum, g_loss_sum])
 
     #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
