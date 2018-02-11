@@ -38,7 +38,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     print("save_dir: " + save_dir)
     print("________________________________________")
 
-    if save_dir != "" and save_dir[0] == "/" and save_dir[0] == "\\":
+    if save_dir != "" and (save_dir[0] == "/" or save_dir[0] == "\\"):
         save_dir = save_dir[1:]
 
     if (data_type == 'mnist' or data_type == 'mnist_fashion'):

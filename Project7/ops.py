@@ -131,7 +131,7 @@ def init_vars():
 
 def tryToRestoreSavedSession(saver, sess, save_dir):
     save_dir = getcwd() + "/save/" + save_dir
-    if save_dir[-1] != '/' or save_dir[-1] != '\\':
+    if save_dir[-1] != '/' and save_dir[-1] != '\\':
         save_dir += '/'
     print('### Try to restore a saved session in path {}'
             .format(save_dir))
@@ -153,7 +153,7 @@ def tryToRestoreSavedSession(saver, sess, save_dir):
 
 
 def saveEpochToFile(epoch, save_dir):
-    if save_dir[-1] != '/' or save_dir[-1] != '\\':
+    if save_dir[-1] != '/' and save_dir[-1] != '\\':
         save_dir += '/'
     with open('./save/' + save_dir + 'epochOfCheckpoint.txt', 'w') as f:
         f.write(str(epoch))
