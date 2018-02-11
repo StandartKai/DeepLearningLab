@@ -98,7 +98,6 @@ class batch_norm(object):
 # https://github.com/GokuMohandas/the-neural-perspective/blob/master/
 #   generative-adversarial-networks/GAN/minibatch_discrimination.py
 def minibatch(inputs, num_kernels=5, kernel_dim=3):
-    # linear ersetzen!! :) 
     x = linear(inputs, num_kernels * kernel_dim, scope='minibatch', stddev=0.02)
     activation = tf.reshape(x, (-1, num_kernels, kernel_dim))
     diffs = tf.expand_dims(activation, 3) - tf.expand_dims(
@@ -106,7 +105,7 @@ def minibatch(inputs, num_kernels=5, kernel_dim=3):
     eps = tf.expand_dims(np.eye(int(inputs.get_shape()[0]), dtype=np.float32), 1)
     abs_diffs = tf.reduce_sum(tf.abs(diffs), 2) + eps
     minibatch_features = tf.reduce_sum(tf.exp(-abs_diffs), 2)
-    return tf.concat(1, [inputs, minibatch_features])
+    return tf.concat([inputs, minibatch_features], 1)
 
 
 
@@ -130,15 +129,18 @@ def init_vars():
         tf.initialize_all_variables().run()
 
 
-def tryToRestoreSavedSession(saver, sess):
+def tryToRestoreSavedSession(saver, sess, save_dir):
+    save_dir = getcwd() + "/save/" + save_dir
+    if save_dir[-1] != '/' or save_dir[-1] != '\\':
+        save_dir += '/'
     print('### Try to restore a saved session in path {}'
-            .format(getcwd() + '/save/'))
+            .format(save_dir))
     try:
-        saver.restore(sess, './save/')
+        saver.restore(sess, save_dir)
         print('### Session successfully restored', end='\n')
 
         print('### Try to read ./save/epochOfCheckpoint.txt', end='\n')
-        with open('./save/epochOfCheckpoint.txt', 'r') as f:
+        with open(save_dir + 'epochOfCheckpoint.txt', 'r') as f:
             last_epoch = int(f.read())
             print('### Epoch of checkpoint successfully restored \n'
                 + '### Epoch is {}'.format(last_epoch), end='\n')
@@ -150,8 +152,10 @@ def tryToRestoreSavedSession(saver, sess):
         return 0
 
 
-def saveEpochToFile(epoch):
-    with open('./save/epochOfCheckpoint.txt', 'w') as f:
+def saveEpochToFile(epoch, save_dir):
+    if save_dir[-1] != '/' or save_dir[-1] != '\\':
+        save_dir += '/'
+    with open('./save/' + save_dir + 'epochOfCheckpoint.txt', 'w') as f:
         f.write(str(epoch))
 
 

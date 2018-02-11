@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import distutils.util as utils
 
-from minator import *
+from discriminator import *
 from generator import *
 from ops import loadDataFromMNIST
 from ops import groupLabels
@@ -16,7 +16,8 @@ from six.moves import xrange
 
 # size of eaach picture: 28 x 28
 def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
-         z_dim, learning_rate, beta_1, data_type, data_path, train, restore):
+         z_dim, learning_rate, beta_1, data_type, data_path, train, restore,
+         save_dir):
 
     print("________________________________________")
     print("called main with settings: ")
@@ -34,8 +35,11 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     print("data_path: " + str(data_path))
     print("train: " + str(train))
     print("restore: " + str(restore))
+    print("save_dir: " + save_dir)
     print("________________________________________")
 
+    if save_dir != "" and save_dir[0] == "/" and save_dir[0] == "\\":
+        save_dir = save_dir[1:]
 
     if (data_type == 'mnist' or data_type == 'mnist_fashion'):
         mnist = loadDataFromMNIST(data_path)
@@ -107,21 +111,23 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
 
-    writer = tf.summary.FileWriter('./logs', sess.graph)
+    writer = tf.summary.FileWriter('./logs' + save_dir, sess.graph)
 
     epoch_of_checkpoint = 0
     if restore:
-        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess)
+        epoch_of_checkpoint = tryToRestoreSavedSession(saver, sess, save_dir)
         if train and epoch_of_checkpoint > num_epochs:
             print('### WARNING: Max. number of epochs already reached.')
             return
     if train:
         images_train, labels_train = None, None
         batches_number = 0
-        if (data_type == 'mnist' or data_type == 'mnist_fashion'):
+        if (data_type == 'mnist'):
             batches_number = int(mnist.train.num_examples / batch_size)
-            if (data_type == 'mnist_fashion'):
-                images_train, labels_train = extractShirts(mnist)
+        if (data_type == 'mnist_fashion'):
+            images_train, labels_train = extractShirts(mnist)
+            batches_number = int(images_train.shape[0] / batch_size)
+            print("Shirts extracted")
         if (data_type == 'deep_fashion'):
             #images_train, _ = loadData("data_fashion.h5", "images_fashion", False)
             images_train, _ = loadData(data_path, "images_fashion", False)
@@ -171,11 +177,11 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                     print("Epoch: [%2d] [%4d / %4d], d_loss: %.8f, g_loss: %.8f, g_cost: %.8f" \
                         % (epoch, batch_number, batches_number, errD_fake+errD_real, errG, errG_cost))
 
-            saver.save(sess, "./save/")
-            saveEpochToFile(epoch)
+            saver.save(sess, "./save/" + save_dir)
+            saveEpochToFile(epoch, save_dir)
 
-        saver.save(sess, "./save/")
-        saveEpochToFile(epoch)
+        saver.save(sess, "./save/" + save_dir)
+        saveEpochToFile(epoch, save_dir)
 
     """ EVALUATING """
     if restore and not train:
@@ -211,14 +217,15 @@ with tf.Session() as sess:
     parser.add_argument("-zd", "--z_dim", default=100)
     parser.add_argument("-lr", "--learning_rate", default=0.0002)
     parser.add_argument("-b", "--beta_1", default=0.5)
-    parser.add_argument("-dt", "--data_type", type=str, default='mnist')
+    parser.add_argument("-dt", "--data_type", type=str, default='mnist_fashion')
     parser.add_argument("-dp", "--data_path", default='./tmp/tensorflow/mnist/mnist_fashion')
     parser.add_argument("-tr", "--train", type=utils.strtobool, default=False)
     parser.add_argument("-re", "--restore", type=utils.strtobool, default=True)
+    parser.add_argument("-sd", "--save_dir", type=str, default="")
 
     args = parser.parse_args()
 
     main(sess, int(args.batch_size), int(args.num_epochs), int(args.input_height),
         int(args.input_width), int(args.c_dim), int(args.y_dim),
         int(args.z_dim), float(args.learning_rate), float(args.beta_1), args.data_type,
-        args.data_path, args.train, args.restore)
+        args.data_path, args.train, args.restore, args.save_dir)
