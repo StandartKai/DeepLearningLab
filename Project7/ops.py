@@ -95,6 +95,20 @@ class batch_norm(object):
                         is_training=train,
                         scope=self.name)
 
+# https://github.com/GokuMohandas/the-neural-perspective/blob/master/
+#   generative-adversarial-networks/GAN/minibatch_discrimination.py
+def minibatch(inputs, num_kernels=5, kernel_dim=3):
+    # linear ersetzen!! :) 
+    x = linear(inputs, num_kernels * kernel_dim, scope='minibatch', stddev=0.02)
+    activation = tf.reshape(x, (-1, num_kernels, kernel_dim))
+    diffs = tf.expand_dims(activation, 3) - tf.expand_dims(
+        tf.transpose(activation, [1, 2, 0]), 0)
+    eps = tf.expand_dims(np.eye(int(inputs.get_shape()[0]), dtype=np.float32), 1)
+    abs_diffs = tf.reduce_sum(tf.abs(diffs), 2) + eps
+    minibatch_features = tf.reduce_sum(tf.exp(-abs_diffs), 2)
+    return tf.concat(1, [inputs, minibatch_features])
+
+
 
 def loadDataFromMNIST(path=None):
     """ Loads the data from MNIST

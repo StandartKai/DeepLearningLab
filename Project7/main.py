@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import distutils.util as utils
 
-from discriminator import *
+from minator import *
 from generator import *
 from ops import loadDataFromMNIST
 from ops import groupLabels
@@ -53,9 +53,11 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
                             gf_dim=64, gfc_dim=1024, c_dim=c_dim)
 
     # actual images as input
-    d, d_logits, d_intermediate = discriminator(inputs, reuse=False)
+    d, d_logits, d_intermediate = discriminator(inputs, reuse=False,
+                                            use_minibatch=True)
     # generated, "fake" images as input
-    d_, d_logits_, d_intermediate_ = discriminator(gen_output, reuse=True)
+    d_, d_logits_, d_intermediate_ = discriminator(gen_output, reuse=True,
+                                            use_minibatch=True)
 
     d_sum = tf.summary.histogram("d", d)
     d__sum = tf.summary.histogram("d_", d_)
