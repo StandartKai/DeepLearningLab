@@ -22,4 +22,4 @@ def discriminator(image, reuse, num_filters=64, batch_size=64, use_minibatch=Fal
             h2 = lrelu(d_bn2(conv2d(h1, num_filters*4, name='d_h2_conv')))
         h3 = lrelu(d_bn3(conv2d(h2, num_filters*8, name='d_h3_conv')))
         h4 = linear(tf.reshape(h3, [batch_size, -1]), 1, 'd_h3_lin')
-        return tf.nn.sigmoid(h4), h4, h3
+        return tf.nn.sigmoid(h4), h4, h2

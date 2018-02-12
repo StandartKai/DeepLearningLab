@@ -97,10 +97,10 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(d_loss, var_list=d_vars)
-    # g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
-                # .minimize(g_loss, var_list=g_vars)
     g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(g_cost, var_list=g_vars)
+    # g_optim2 = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
+    #             .minimize(g_loss, var_list=g_vars)
 
     init_vars()
     saver = tf.train.Saver()
@@ -111,7 +111,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     #d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     d_sum = tf.summary.merge([d_loss_real_sum, d_loss_sum])
 
-    writer = tf.summary.FileWriter('./logs' + save_dir, sess.graph)
+    writer = tf.summary.FileWriter('./logs/' + save_dir, sess.graph)
 
     epoch_of_checkpoint = 0
     if restore:
@@ -160,7 +160,6 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
                 _, summary_str = sess.run([g_optim, g_sum],
                                 feed_dict={z: batch_z, inputs: images_batch})
-
                 if batch_number % 100 == 0:
                     writer.add_summary(summary_str, iteration + batch_number)
 
