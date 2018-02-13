@@ -58,10 +58,10 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
 
     # actual images as input
     d, d_logits, d_intermediate = discriminator(inputs, reuse=False,
-                                            use_minibatch=True)
+                                            use_minibatch=False)
     # generated, "fake" images as input
     d_, d_logits_, d_intermediate_ = discriminator(gen_output, reuse=True,
-                                            use_minibatch=True)
+                                            use_minibatch=False)
 
     d_sum = tf.summary.histogram("d", d)
     d__sum = tf.summary.histogram("d_", d_)
@@ -70,10 +70,14 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     labels_normal_zero = tf.zeros_like(d)
     labels_normal_one = tf.ones_like(d_)
 
-    d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=labels_normal_one))
-    d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_zero))
+    # d_loss_real = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits, labels=labels_normal_one))
+    # d_loss_fake = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_zero))
+    d_loss_real = tf.reduce_min(tf.abs(tf.substract(tf.reduce_mean(d), 1)))
+    d_loss_fake = tf.reduce_min(tf.reduce_mean(d_))
+
+
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_, labels=labels_normal_one))
 
@@ -98,9 +102,7 @@ def main(sess, batch_size, num_epochs, input_height, input_width, c_dim, y_dim,
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
                 .minimize(d_loss, var_list=d_vars)
     g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
-                .minimize(g_cost, var_list=g_vars)
-    # g_optim2 = tf.train.AdamOptimizer(learning_rate, beta1=beta_1) \
-    #             .minimize(g_loss, var_list=g_vars)
+                .minimize(g_loss, var_list=g_vars)
 
     init_vars()
     saver = tf.train.Saver()
